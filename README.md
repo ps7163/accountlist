@@ -23,7 +23,7 @@
 - **全局搜索**：⌘K / Ctrl+K 搜索订阅、邮箱、支付方式、卡片和常用操作
 - **回收站**：删除的订阅、邮箱、支付方式、卡片保留 30 天，可恢复（连同付费记录和卡片）
 - **操作日志**：新建、编辑、续费、删除、登录、导入导出等操作都有记录，保留一年
-- **AI 接入**：内置 MCP 接口和命令行工具，Claude、Cursor 等 AI 助手可以查询订阅和待办，也可以帮你录入、续费、标记取消（见下文）
+- **AI 接入**：内置 MCP 接口和命令行工具，Codex、Gemini、Cherry Studio（可搭配 DeepSeek、通义千问、GPT 等）、Cursor、Claude 等 AI 助手可以查询订阅和待办，也可以帮你录入、续费、标记取消（见下文）
 - **添加到手机主屏幕**：iPhone 用 Safari「分享 → 添加到主屏幕」，安卓用 Chrome「安装应用」
 - 6 款顶部皮肤，深色模式，手机端适配
 
@@ -112,7 +112,30 @@ docker compose exec accountlist node -e "new (require('better-sqlite3'))('/app/d
 
 先在「系统设置 → AI 接入」新建一个 API 令牌。**只读**令牌只能查询；**可读写**令牌还能新建、修改、续费、取消和删除（移入回收站）订阅。令牌只显示一次，数据库里只保存哈希；AI 做的每次修改都会记在操作日志里，并标明是哪个令牌。不用了随时可以撤销。
 
-MCP 地址是 `https://你的域名/api/mcp`（Streamable HTTP，用 `Authorization: Bearer <令牌>` 鉴权）。
+MCP 地址是 `https://你的域名/api/mcp`（Streamable HTTP，用 `Authorization: Bearer <令牌>` 鉴权）。接口不绑定任何模型，查询订阅这类简单任务可以交给更便宜的模型。设置页里有各客户端的配置，可以直接复制。
+
+**Codex CLI**
+
+```bash
+export ACCOUNTLIST_TOKEN=al_xxx   # 建议写进 ~/.zshrc 或 ~/.bashrc
+codex mcp add accountlist --url https://acct.example.com/api/mcp --bearer-token-env-var ACCOUNTLIST_TOKEN
+```
+
+或编辑 `~/.codex/config.toml`：
+
+```toml
+[mcp_servers.accountlist]
+url = "https://acct.example.com/api/mcp"
+bearer_token_env_var = "ACCOUNTLIST_TOKEN"
+```
+
+**Gemini CLI**（`~/.gemini/settings.json`）
+
+```json
+{ "mcpServers": { "accountlist": { "httpUrl": "https://acct.example.com/api/mcp", "headers": { "Authorization": "Bearer al_xxx" } } } }
+```
+
+**Cherry Studio**（可搭配 DeepSeek、通义千问、GPT 等任意支持工具调用的模型）：设置 → MCP 服务器 → 添加服务器，类型选「可流式传输的 HTTP（streamableHttp）」，URL 填 `https://acct.example.com/api/mcp`，请求头填 `Authorization=Bearer al_xxx`，然后在对话里启用它。
 
 **Claude Code**
 
@@ -121,13 +144,13 @@ claude mcp add --transport http accountlist https://acct.example.com/api/mcp \
   --header "Authorization: Bearer al_xxx"
 ```
 
-**Cursor、Cherry Studio 等支持远程 MCP 的客户端**
+**Cursor、Windsurf、Cline 等支持远程 MCP 的客户端**
 
 ```json
 { "mcpServers": { "accountlist": { "url": "https://acct.example.com/api/mcp", "headers": { "Authorization": "Bearer al_xxx" } } } }
 ```
 
-**Claude Desktop 等只支持本地 MCP 的客户端**：用命令行工具桥接（需要 Node.js 18+）。
+**Claude Desktop 等只支持本地 MCP 的客户端**（任何能运行本地命令的 MCP 客户端都可以这样接）：用命令行工具桥接（需要 Node.js 18+）。
 
 ```bash
 curl -fsSL https://acct.example.com/accountlist.mjs -o ~/accountlist.mjs
@@ -166,7 +189,7 @@ node accountlist.mjs help                  # 全部命令
 | `list_emails`、`list_pay_methods`、`list_notes`、`list_payments` | `snooze_subscription` 稍后提醒、`set_usage` 使用频率、`add_payment` 补记付费 |
 | `get_spending` 支出分析、`get_review` 订阅体检、`get_security_risks` 账号安全、`list_activity` 操作日志 | `delete_subscription` 移入回收站、`save_email`、`save_pay_method`、`save_note` |
 
-手机号默认打码返回。claude.ai 网页版的「自定义连接器」需要 OAuth 登录，暂不支持。
+手机号默认打码返回。claude.ai 网页版的「自定义连接器」和 ChatGPT 网页版的连接器需要 OAuth 登录，暂不支持；用 Codex、Cherry Studio 等客户端即可。
 
 ## 本地开发
 
