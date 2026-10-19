@@ -1,0 +1,16 @@
+services:
+  accountlist:
+    build: .
+    image: accountlist:latest
+    platform: linux/amd64
+    container_name: accountlist
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - TZ=Asia/Shanghai
+      # 通过 HTTPS 反向代理访问时，Cookie 会根据 X-Forwarded-Proto 自动加上 Secure；
+      # 也可以手动强制：COOKIE_SECURE=true
+      # - COOKIE_SECURE=true
