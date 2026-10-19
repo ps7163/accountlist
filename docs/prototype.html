@@ -1,0 +1,1329 @@
+<title>账号簿</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: 企业后台结构（参考飞书管理后台）—— 左侧导航 + 顶栏 + 灰底白卡片；表格为主，抽屉看详情，弹窗做表单。 */
+:root{
+  --bg:#F2F3F5; --panel:#FFFFFF; --fill:#F5F6F7; --hover:#EFF0F1; --press:#E4E5E7;
+  --text:#1F2329; --text-2:#646A73; --text-3:#8F959E; --text-4:#BBBFC4;
+  --border:#DEE0E3; --divider:#E8E9EB; --ctrl:#D0D3D6;
+  --primary:#3370FF; --primary-hover:#4E83FD; --primary-press:#245BDB; --primary-soft:#E1EAFF; --primary-text:#245BDB; --on-primary:#FFFFFF;
+  --green:#2EA121; --green-soft:#D9F5D6; --green-text:#237B19;
+  --orange:#FF8800; --orange-soft:#FEEAD2; --orange-text:#B26206; --orange-bg:#FFF5EB; --orange-line:#FFD7AD;
+  --red:#F54A45; --red-soft:#FDE2E2; --red-text:#D83931;
+  --purple:#7F3BF5; --purple-soft:#ECE2FE; --purple-text:#6425D0;
+  --gray-soft:#EFF0F1; --gray-text:#646A73;
+  --c1:#3370FF; --c1-soft:#ADC6FF; --c2:#FF8800; --c3:#14A8A0; --c4:#7F3BF5; --c5:#D6457E; --c6:#8F959E;
+  --blue:#3370FF; --blue-soft:#E1EAFF;
+  --glass:rgba(255,255,255,.62); --glass-side:rgba(255,255,255,.8); --glass-line:rgba(31,35,41,.06);
+  --card-line:#EBECEE; --card-shadow:0 1px 2px rgba(31,35,41,.04),0 2px 12px rgba(31,35,41,.04); --skin-op:1;
+  --shadow:0 4px 8px rgba(31,35,41,.03),0 3px 6px -6px rgba(31,35,41,.05),0 6px 18px 6px rgba(31,35,41,.03);
+  --shadow-lg:0 6px 24px rgba(31,35,41,.08),0 8px 16px -8px rgba(31,35,41,.06);
+  --mask:rgba(31,35,41,.4);
+  --font:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Tahoma,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141414; --panel:#1F1F1F; --fill:#292929; --hover:#2E2E2E; --press:#373737;
+  --text:#EBEBEB; --text-2:#A6A6A6; --text-3:#757575; --text-4:#5F5F5F;
+  --border:#373737; --divider:#2E2E2E; --ctrl:#4A4A4A;
+  --primary:#4C88FF; --primary-hover:#6B9CFF; --primary-press:#3A73E8; --primary-soft:#1B2A4D; --primary-text:#82A7FC; --on-primary:#FFFFFF;
+  --green:#51BA43; --green-soft:#1C3319; --green-text:#7DCB6F;
+  --orange:#F5952D; --orange-soft:#3D2A12; --orange-text:#F8AE5B; --orange-bg:#2A2014; --orange-line:#5C4020;
+  --red:#F76964; --red-soft:#3F1D1C; --red-text:#F98E8B;
+  --purple:#9F6FF1; --purple-soft:#2B1F45; --purple-text:#B793F5;
+  --gray-soft:#2E2E2E; --gray-text:#A6A6A6;
+  --c1:#4C88FF; --c1-soft:#2D4A85; --c2:#C97316; --c3:#1FA398; --c4:#9F6FF1; --c5:#D65C92; --c6:#757575;
+  --blue:#4C88FF; --blue-soft:#1B2A4D;
+  --glass:rgba(31,31,31,.6); --glass-side:rgba(31,31,31,.82); --glass-line:rgba(255,255,255,.06);
+  --card-line:#2A2A2A; --card-shadow:none; --skin-op:.22;
+  --shadow:0 2px 8px rgba(0,0,0,.3); --shadow-lg:0 8px 28px rgba(0,0,0,.45); --mask:rgba(0,0,0,.6); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141414; --panel:#1F1F1F; --fill:#292929; --hover:#2E2E2E; --press:#373737;
+  --text:#EBEBEB; --text-2:#A6A6A6; --text-3:#757575; --text-4:#5F5F5F;
+  --border:#373737; --divider:#2E2E2E; --ctrl:#4A4A4A;
+  --primary:#4C88FF; --primary-hover:#6B9CFF; --primary-press:#3A73E8; --primary-soft:#1B2A4D; --primary-text:#82A7FC; --on-primary:#FFFFFF;
+  --green:#51BA43; --green-soft:#1C3319; --green-text:#7DCB6F;
+  --orange:#F5952D; --orange-soft:#3D2A12; --orange-text:#F8AE5B; --orange-bg:#2A2014; --orange-line:#5C4020;
+  --red:#F76964; --red-soft:#3F1D1C; --red-text:#F98E8B;
+  --purple:#9F6FF1; --purple-soft:#2B1F45; --purple-text:#B793F5;
+  --gray-soft:#2E2E2E; --gray-text:#A6A6A6;
+  --c1:#4C88FF; --c1-soft:#2D4A85; --c2:#C97316; --c3:#1FA398; --c4:#9F6FF1; --c5:#D65C92; --c6:#757575;
+  --blue:#4C88FF; --blue-soft:#1B2A4D;
+  --glass:rgba(31,31,31,.6); --glass-side:rgba(31,31,31,.82); --glass-line:rgba(255,255,255,.06);
+  --card-line:#2A2A2A; --card-shadow:none; --skin-op:.22;
+  --shadow:0 2px 8px rgba(0,0,0,.3); --shadow-lg:0 8px 28px rgba(0,0,0,.45); --mask:rgba(0,0,0,.6); color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:22px;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--panel)}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--primary);text-decoration:none}
+a:hover{color:var(--primary-hover)}
+:focus-visible{outline:2px solid var(--primary);outline-offset:1px;border-radius:6px}
+.num{font-variant-numeric:tabular-nums}
+.t2{color:var(--text-2)} .t3{color:var(--text-3)}
+.ell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+svg.i{width:16px;height:16px;flex:none;display:block}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100vh;position:relative;isolation:isolate}
+.skin{position:absolute;inset:0 0 auto 0;height:300px;z-index:-1;background-size:cover;background-position:center top;background-repeat:no-repeat;opacity:var(--skin-op);-webkit-mask-image:linear-gradient(#000 60%,transparent);mask-image:linear-gradient(#000 60%,transparent);pointer-events:none}
+.side{position:sticky;top:0;height:100vh;background:var(--glass-side);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-right:1px solid var(--glass-line);display:flex;flex-direction:column;padding-left:env(safe-area-inset-left,0px);z-index:25}
+.logo-row{height:56px;display:flex;align-items:center;gap:10px;padding:0 20px;font-weight:600;font-size:16px}
+.logo-mark{width:26px;height:26px;border-radius:6px;background:var(--primary);color:#fff;display:grid;place-items:center}
+.logo-mark svg{width:15px;height:15px}
+.menu{padding:8px;display:grid;gap:2px}
+.menu-label{font-size:12px;color:var(--text-3);padding:12px 12px 4px}
+.m-item{display:flex;align-items:center;gap:10px;height:38px;padding:0 12px;border-radius:6px;border:0;background:none;width:100%;cursor:pointer;color:var(--text);text-align:left}
+.m-item .i{color:var(--text-2)}
+.m-item:hover{background:var(--hover)}
+.m-item[aria-current="page"]{background:var(--primary-soft);color:var(--primary-text);font-weight:500}
+.m-item[aria-current="page"] .i{color:var(--primary)}
+.m-badge{margin-left:auto;background:var(--red);color:#fff;font-size:12px;line-height:16px;border-radius:8px;padding:0 5px;min-width:16px;text-align:center}
+.side-foot{margin-top:auto;padding:12px 20px;border-top:1px solid var(--divider);display:flex;align-items:center;gap:10px;font-size:13px}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+
+.mainc{min-width:0;display:flex;flex-direction:column}
+.header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;height:56px;background:var(--glass);backdrop-filter:saturate(1.4) blur(20px);-webkit-backdrop-filter:saturate(1.4) blur(20px);border-bottom:1px solid var(--glass-line);display:flex;align-items:center;gap:12px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.crumb{display:flex;align-items:center;gap:6px;color:var(--text-3);min-width:0}
+.crumb b{color:var(--text);font-weight:600;font-size:16px}
+.h-r{margin-left:auto;display:flex;align-items:center;gap:4px}
+.icon-btn{position:relative;width:32px;height:32px;border:0;background:none;border-radius:6px;display:grid;place-items:center;cursor:pointer;color:var(--text-2)}
+.icon-btn:hover{background:var(--hover);color:var(--text)}
+.icon-btn .dot{position:absolute;top:4px;right:4px;background:var(--red);color:#fff;font-size:10px;line-height:14px;min-width:14px;padding:0 3px;border-radius:7px}
+.burger{display:none}
+
+.content{padding-block:20px 48px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+
+/* ---------- primitives ---------- */
+.card{background:var(--panel);border-radius:12px;border:1px solid var(--card-line);box-shadow:var(--card-shadow);min-width:0}
+.card-h{min-height:56px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 24px;flex-wrap:wrap}
+.card-h h2{margin:0;font-size:16px;font-weight:600}
+.card-h .ex{font-size:12px;color:var(--text-3)}
+.card-b{padding:0 24px 16px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;height:32px;padding:0 15px;border-radius:6px;border:1px solid var(--ctrl);background:var(--panel);cursor:pointer;white-space:nowrap;font-size:14px;color:var(--text)}
+.btn:hover{background:var(--hover)}
+.btn:active{background:var(--press)}
+.btn-primary{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+.btn-primary:hover{background:var(--primary-hover);border-color:var(--primary-hover)}
+.btn-primary:active{background:var(--primary-press)}
+.btn-sm{height:28px;padding:0 11px;font-size:13px}
+.btn-text{border:0;background:none;color:var(--primary);padding:0 4px;height:auto;font-size:14px;cursor:pointer}
+.btn-text:hover{background:none;color:var(--primary-hover)}
+.btn-text.danger{color:var(--red)}
+.btn .i{width:14px;height:14px}
+
+.tag{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 7px;border-radius:4px;font-size:12px;line-height:20px;white-space:nowrap;font-weight:500}
+.tg-blue{background:var(--primary-soft);color:var(--primary-text)}
+.tg-green{background:var(--green-soft);color:var(--green-text)}
+.tg-orange{background:var(--orange-soft);color:var(--orange-text)}
+.tg-red{background:var(--red-soft);color:var(--red-text)}
+.tg-purple{background:var(--purple-soft);color:var(--purple-text)}
+.tg-gray{background:var(--gray-soft);color:var(--gray-text)}
+
+.blogo{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;color:#fff;font-weight:600;font-size:12px;flex:none}
+.blogo.md{width:32px;height:32px;border-radius:8px;font-size:14px}
+.blogo.lg{width:40px;height:40px;border-radius:8px;font-size:18px}
+.blogo.xs{width:16px;height:16px;border-radius:4px;font-size:9px}
+
+.inp,.sel{height:32px;border:1px solid var(--ctrl);border-radius:6px;background:var(--panel);padding:0 11px;min-width:0;transition:border-color .15s}
+.inp:hover,.sel:hover{border-color:var(--primary)}
+.inp:focus,.sel:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft)}
+.search{display:flex;align-items:center;gap:6px;height:32px;border:1px solid var(--ctrl);border-radius:6px;background:var(--panel);padding:0 10px;width:260px;max-width:100%}
+.search:focus-within{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft)}
+.search .i{color:var(--text-3)}
+.search input{border:0;background:none;outline:none;width:100%;min-width:0}
+
+/* alert */
+.alert{display:flex;gap:10px;align-items:flex-start;padding:10px 16px;border-radius:10px;border:1px solid var(--orange-line);background:var(--orange-bg)}
+.alert .i{color:var(--orange);margin-top:3px}
+.alert .grow{flex:1;min-width:0}
+.alert b{font-weight:600}
+.alert.ok{border-color:var(--green-soft);background:var(--green-soft)}
+.alert.ok .i{color:var(--green)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.stat{padding:18px 24px;border-left:1px solid var(--divider);min-width:0}
+.stat:first-child{border-left:0}
+.stat .l{color:var(--text-2);font-size:14px;display:flex;align-items:center;gap:6px}
+.stat .v{font-size:28px;line-height:40px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+.stat .v small{font-size:14px;font-weight:400;color:var(--text-2);margin-left:2px;letter-spacing:0}
+.stat .s{font-size:12px;color:var(--text-3)}
+
+.g2{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;align-items:start}
+.col{display:grid;gap:16px;min-width:0}
+
+/* table */
+.tbl-wrap{overflow-x:auto}
+table.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-weight:500;color:var(--text-2);background:var(--fill);height:40px;padding:0 12px;white-space:nowrap;border-bottom:1px solid var(--divider)}
+.tbl td{padding:12px;border-bottom:1px solid var(--divider);vertical-align:middle;white-space:nowrap}
+.tbl tr.row{cursor:pointer}
+.tbl tr.row:hover td{background:var(--fill)}
+.tbl tr.sel td{background:var(--primary-soft)}
+.tbl th:first-child,.tbl td:first-child{padding-left:24px}
+.tbl th:last-child,.tbl td:last-child{padding-right:24px}
+.tbl .r{text-align:right}
+.tbl .svc{display:flex;align-items:center;gap:10px}
+.tbl .sub{font-size:12px;color:var(--text-3);line-height:18px}
+.tbl .ops{display:flex;gap:12px}
+.tbl .sticky-r{position:sticky;right:0;background:var(--panel);box-shadow:-6px 0 8px -6px rgba(31,35,41,.12)}
+.tbl th.sticky-r{background:var(--fill)}
+.tbl.compact td{padding:10px 12px}
+input[type=checkbox].ck{width:16px;height:16px;accent-color:var(--primary);cursor:pointer;margin:0;vertical-align:middle}
+.tbl-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 24px;color:var(--text-2);font-size:13px;flex-wrap:wrap}
+.pager{display:flex;gap:4px;align-items:center}
+.pager button{min-width:28px;height:28px;border:1px solid transparent;border-radius:6px;background:none;cursor:pointer;color:var(--text-2);display:grid;place-items:center}
+.pager button[aria-current="page"]{border-color:var(--primary);color:var(--primary);font-weight:500}
+.pager button:hover:not([disabled]):not([aria-current]){background:var(--hover)}
+.pager button[disabled]{color:var(--text-4);cursor:not-allowed}
+.pager .ellip{min-width:20px;text-align:center;color:var(--text-3)}
+.pager-wrap{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.empty{padding:48px 20px;text-align:center;color:var(--text-3)}
+
+/* tabs + toolbar */
+.tabs{display:flex;gap:28px;padding:0 20px;border-bottom:1px solid var(--divider);overflow-x:auto}
+.tab{border:0;background:none;height:46px;cursor:pointer;color:var(--text-2);position:relative;white-space:nowrap;padding:0;display:flex;align-items:center;gap:4px}
+.tab:hover{color:var(--text)}
+.tab[aria-selected="true"]{color:var(--primary);font-weight:500}
+.tab[aria-selected="true"]::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--primary);border-radius:2px}
+.tab .n{font-size:12px;color:var(--text-3)}
+.tab[aria-selected="true"] .n{color:var(--primary)}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:14px 20px}
+.toolbar .sp{flex:1}
+.batch{display:flex;align-items:center;gap:16px;padding:8px 20px;background:var(--primary-soft);color:var(--primary-text);font-size:13px;flex-wrap:wrap}
+
+/* bars */
+.bars{display:grid;gap:14px}
+.bar-l{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+.bar{height:6px;border-radius:3px;background:var(--fill);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px}
+
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-top:1px solid var(--divider);border-left:1px solid var(--divider)}
+.cal .wd{font-size:12px;color:var(--text-3);padding:6px 8px;border-right:1px solid var(--divider);border-bottom:1px solid var(--divider);background:var(--fill)}
+.day{min-height:96px;padding:4px 6px;border-right:1px solid var(--divider);border-bottom:1px solid var(--divider);background:var(--panel);display:flex;flex-direction:column;gap:3px;min-width:0}
+.day .n{font-size:12px;color:var(--text-2);width:22px;height:22px;display:grid;place-items:center;border-radius:50%}
+.day.today .n{background:var(--primary);color:#fff}
+.day.out{background:var(--fill)}
+.chip{display:flex;align-items:center;gap:4px;font-size:12px;line-height:18px;border-radius:4px;padding:1px 4px;background:var(--primary-soft);color:var(--primary-text);min-width:0;border:0;cursor:pointer;text-align:left;width:100%}
+.chip.paid{background:var(--gray-soft);color:var(--text-3)}
+.chip.trial{background:var(--purple-soft);color:var(--purple-text)}
+.chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.more{font-size:12px;color:var(--text-3);padding-left:4px}
+
+/* list items */
+.li{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--divider);cursor:pointer}
+.li:last-child{border-bottom:0}
+.li .grow{flex:1;min-width:0}
+.li:hover .nm{color:var(--primary)}
+
+/* mobile list */
+.mlist{display:none}
+.mcard{padding:14px 16px;border-bottom:1px solid var(--divider);display:grid;gap:6px;cursor:pointer}
+.mcard .top{display:flex;align-items:center;gap:10px}
+.mcard .top .grow{flex:1;min-width:0}
+.mcard .meta{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--text-2);min-width:0}
+
+/* drawer & modal */
+.mask{position:fixed;inset:0;background:var(--mask);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100%);background:var(--panel);z-index:41;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+.dr-h{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid var(--divider);flex:none}
+.dr-h h2{margin:0;font-size:16px;font-weight:600}
+.dr-b{flex:1;overflow:auto;padding:20px 24px;display:grid;gap:24px;align-content:start}
+.dr-f{display:flex;gap:8px;justify-content:flex-end;padding:12px 24px;border-top:1px solid var(--divider);flex:none;flex-wrap:wrap}
+.d-top{display:flex;gap:14px;align-items:center}
+.d-top h3{margin:0;font-size:18px;font-weight:600;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sec-t{font-size:14px;font-weight:600;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+.sec-t::before{content:"";width:3px;height:14px;border-radius:2px;background:var(--primary)}
+.desc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 24px;margin:0}
+.desc div{min-width:0}
+.desc dt{font-size:12px;color:var(--text-3);line-height:18px}
+.desc dd{margin:2px 0 0;overflow-wrap:anywhere}
+.desc .full{grid-column:1/-1}
+.trial-box{background:var(--purple-soft);color:var(--purple-text);border-radius:6px;padding:8px 12px;font-size:13px}
+
+.modal{position:fixed;z-index:41;left:50%;top:50%;transform:translate(-50%,-50%);width:min(680px,calc(100% - 32px));max-height:calc(100% - 64px);background:var(--panel);border-radius:8px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column}
+.md-b{overflow:auto;padding:4px 24px 20px}
+.form-sec{font-size:14px;font-weight:600;margin:16px 0 12px}
+.fg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px}
+.f{display:grid;gap:6px;min-width:0;align-content:start}
+.f.full{grid-column:1/-1}
+.f>label,.f .lab{font-size:14px;color:var(--text)}
+.req::before{content:"* ";color:var(--red)}
+.f .inp,.f .sel,.f textarea{width:100%}
+.f textarea{border:1px solid var(--ctrl);border-radius:6px;background:var(--panel);padding:6px 11px;min-height:64px;resize:vertical}
+.f textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft)}
+.hint{font-size:12px;color:var(--text-3)}
+.radios{display:inline-flex;border:1px solid var(--ctrl);border-radius:6px;overflow:hidden;flex-wrap:wrap;width:max-content;max-width:100%}
+.radios input{position:absolute;opacity:0;pointer-events:none}
+.radios label{padding:0 14px;height:30px;display:flex;align-items:center;cursor:pointer;border-left:1px solid var(--ctrl);font-size:14px}
+.radios label:first-of-type{border-left:0}
+.radios input:checked+label{background:var(--primary-soft);color:var(--primary-text);font-weight:500}
+.radios input:focus-visible+label{outline:2px solid var(--primary);outline-offset:-2px}
+.affix{display:flex}
+.affix span{height:32px;display:grid;place-items:center;padding:0 10px;background:var(--fill);border:1px solid var(--ctrl);border-right:0;border-radius:6px 0 0 6px;color:var(--text-2)}
+.affix .inp{border-radius:0 6px 6px 0}
+.sw{display:flex;align-items:center;gap:8px;cursor:pointer}
+.sw input{appearance:none;-webkit-appearance:none;width:28px;height:16px;border-radius:8px;background:var(--text-4);position:relative;cursor:pointer;margin:0;transition:background .15s;flex:none}
+.sw input::after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .15s}
+.sw input:checked{background:var(--primary)}
+.sw input:checked::after{left:14px}
+
+.steps{display:flex;gap:8px;align-items:center;margin:12px 0 20px}
+.stp{display:flex;align-items:center;gap:8px;white-space:nowrap;color:var(--text-2)}
+.stp .k{width:24px;height:24px;border-radius:50%;border:1px solid var(--ctrl);display:grid;place-items:center;font-size:12px}
+.stp.on{color:var(--text);font-weight:500}
+.stp.on .k{background:var(--primary);border-color:var(--primary);color:#fff}
+.stp.done .k{border-color:var(--primary);color:var(--primary)}
+.stp-line{flex:1;height:1px;background:var(--divider);min-width:16px}
+.upload{border:1px dashed var(--ctrl);border-radius:8px;padding:20px;text-align:center;background:var(--fill);display:grid;gap:4px;justify-items:center;color:var(--text-2)}
+.upload .i{width:28px;height:28px;color:var(--primary)}
+.file{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--divider);border-radius:6px;margin-top:12px}
+.file .i{color:var(--green)}
+
+
+/* workbench */
+.hello h1{margin:0;font-size:22px;line-height:32px;font-weight:600}
+.hello p{margin:2px 0 0;color:var(--text-2)}
+.hello b{color:var(--primary);font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.kpi{padding:18px 20px;display:grid;gap:2px}
+.kpi-top{display:flex;justify-content:space-between;align-items:center}
+.kpi-l{color:var(--text-2)}
+.kpi-ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center}
+.kpi-ic .i{width:18px;height:18px}
+.kpi-v{font-size:28px;line-height:38px;font-weight:600;letter-spacing:-.3px}
+.kpi-v small{font-size:14px;font-weight:400;color:var(--text-2);letter-spacing:0}
+.kpi-s{font-size:12px;color:var(--text-3)}
+.legend-s{display:flex;gap:14px;font-size:12px;color:var(--text-2)}
+.legend-s span{display:flex;align-items:center;gap:6px}
+.legend-s i{width:8px;height:8px;border-radius:2px;display:block}
+.chart svg{display:block}
+.chart [data-tip]{cursor:pointer}
+.donut-wrap{display:grid;grid-template-columns:150px minmax(0,1fr);gap:20px;align-items:center;padding-bottom:20px}
+.donut-wrap [data-tip]{cursor:pointer}
+.dl{display:grid;gap:10px}
+.dl-row{display:grid;grid-template-columns:8px minmax(0,1fr) auto 64px;gap:10px;align-items:center;font-size:13px}
+.dl-row i{width:8px;height:8px;border-radius:2px}
+.dl-row b{font-weight:500;text-align:right}
+.up{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--divider);cursor:pointer}
+.up:last-child{border-bottom:0}
+.up:hover .nm{color:var(--primary)}
+.dbox{border-radius:8px;background:var(--fill);text-align:center;padding:5px 0;display:grid;line-height:1.25}
+.dbox b{font-size:18px;font-weight:600}
+.dbox span{font-size:11px;color:var(--text-3)}
+.up-m{display:flex;gap:10px;align-items:center;min-width:0}
+.up-r{display:grid;justify-items:end;gap:4px}
+.up-r b{font-weight:600}
+.mbar{height:4px;border-radius:2px;background:var(--fill);margin:6px 0 4px;overflow:hidden}
+.mbar i{display:block;height:100%;border-radius:2px;background:var(--c1)}
+.tip{position:fixed;z-index:80;pointer-events:none;background:var(--panel);color:var(--text);border:1px solid var(--border);box-shadow:var(--shadow-lg);border-radius:8px;padding:6px 10px;font-size:12px;line-height:18px;white-space:nowrap;transform:translate(-50%,calc(-100% - 10px))}
+.skins{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:14px 16px 16px}
+.sk{border:2px solid transparent;border-radius:10px;overflow:hidden;cursor:pointer;background:var(--fill);padding:0 0 6px;display:grid;gap:6px;font-size:12px;color:var(--text-2)}
+.sk i{display:block;height:52px;background-size:cover;background-position:center top}
+.sk[aria-pressed="true"]{border-color:var(--primary);color:var(--primary-text)}
+
+.tab-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:12px;font-size:13px;color:var(--text-2);flex-wrap:wrap}
+.tab-foot b{color:var(--text);font-weight:600}
+.spend{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:32px;padding:16px 24px 20px}
+.sub-h{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.sub-h b{font-weight:600}
+@media (max-width:1100px){.spend{grid-template-columns:minmax(0,1fr)}}
+/* note cards */
+.nc-yellow{--nbg:#FFF6D6;--nline:#F5E3A3;--ndot:#F5C242}
+.nc-blue{--nbg:#E8F0FF;--nline:#C9DAFF;--ndot:#5B8DEF}
+.nc-green{--nbg:#E4F6EC;--nline:#BFE6CF;--ndot:#3DB27A}
+.nc-pink{--nbg:#FDE8EF;--nline:#F6C6D6;--ndot:#E5739B}
+.nc-purple{--nbg:#F0E9FE;--nline:#D9C9FB;--ndot:#9466F0}
+.nc-gray{--nbg:var(--panel);--nline:var(--border);--ndot:#BBBFC4}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .note{--nbg:var(--fill);--nline:var(--border)}}
+:root[data-theme="dark"] .note{--nbg:var(--fill);--nline:var(--border)}
+.notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;padding:4px 24px 8px;align-items:start}
+.notes-mini{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.note{background:var(--nbg);border:1px solid var(--nline);border-top:3px solid var(--ndot);border-radius:10px;padding:12px 14px;display:grid;gap:8px;cursor:pointer;transition:box-shadow .15s,transform .15s;min-width:0}
+.note:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px)}
+.note-h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.note-h b{font-weight:600;line-height:20px}
+.pin{color:var(--ndot);flex:none}
+.note-b{white-space:pre-wrap;color:var(--text-2);font-size:13px;line-height:20px;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.notes-mini .note-b{-webkit-line-clamp:3}
+.note-f{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:12px;min-width:0}
+.note-t{display:flex;gap:6px;align-items:center;min-width:0;color:var(--text-2)}
+.swatches{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.sw-c{height:24px;border-radius:12px;border:1px solid var(--ctrl);background:var(--panel);padding:0 10px;font-size:12px;cursor:pointer;color:var(--text-2);position:relative;display:inline-grid;place-items:center}
+.sw-c.dot{width:24px;padding:0;background:var(--ndot);border-color:transparent}
+.sw-c.on{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--primary);color:var(--primary-text)}
+.sw-c input{position:absolute;opacity:0;inset:0;cursor:pointer;margin:0}
+label.sw-c:has(input:checked){box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--primary)}
+.btn-danger-t{color:var(--red);border-color:var(--red-soft)}
+.btn-text .i{display:inline-block;vertical-align:-3px;width:14px;height:14px;margin-right:2px}
+@media (max-width:820px){.notes-grid{padding:4px 16px 8px}.notes-mini{grid-template-columns:minmax(0,1fr)}}
+/* todo / security / pay */
+.todo{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--divider)}
+.todo .nm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-weight:500}
+.todo-a{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.lnk{color:var(--text)} .lnk:hover{color:var(--primary)}
+.sel.snooze{height:28px;font-size:13px;padding:0 6px;color:var(--text-2)}
+.pay-ic{width:28px;height:28px;border-radius:8px;background:var(--fill);display:grid;place-items:center;color:var(--text-2);flex:none}
+.pay-ic.lg{width:32px;height:32px}
+.stack{display:flex}
+.stack .blogo{margin-left:-6px;box-shadow:0 0 0 2px var(--panel)}
+.stack .blogo:first-child{margin-left:0}
+.sec-sum{display:flex;gap:20px;align-items:center;padding:20px 24px;flex-wrap:wrap}
+.shield-big{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:var(--orange-soft);color:var(--orange)}
+.shield-big .i{width:26px;height:26px}
+.sum-n{display:grid;justify-items:center;padding:0 14px;border-left:1px solid var(--divider)}
+.sum-n b{font-size:24px;font-weight:600;line-height:32px}
+.sum-n span{font-size:12px;color:var(--text-3)}
+.risk{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;padding:12px 0;border-bottom:1px solid var(--divider);align-items:start}
+.risk:last-of-type{border-bottom:0}
+.risk-ic{width:32px;height:32px;border-radius:8px;display:grid;place-items:center}
+.graph svg{display:block;width:100%;height:auto}
+.graph [data-tip]{cursor:pointer}
+.guide{margin:0;padding-left:22px;display:grid;gap:6px;color:var(--text-2);font-size:13px}
+.guide li::marker{color:var(--primary);font-weight:600}
+.sug{position:absolute;top:100%;left:0;right:0;margin-top:4px;background:var(--panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-lg);z-index:5;padding:4px;max-height:300px;overflow:auto}
+.sug-h{font-size:12px;color:var(--text-3);padding:6px 8px 4px}
+.sug-i{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;padding:6px 8px;border-radius:6px;cursor:pointer;text-align:left}
+.sug-i:hover{background:var(--hover)}
+.sug-i .grow{flex:1;min-width:0}
+.copy-row{display:flex;gap:8px;width:100%;max-width:560px}
+.copy-row .inp{flex:1;min-width:0}
+.fs-msg{border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--text-2);display:grid;gap:4px;max-width:360px;background:var(--panel);box-shadow:var(--card-shadow)}
+.fs-h{display:flex;gap:8px;align-items:center;font-weight:600;color:var(--text);margin-bottom:4px}
+.fs-btn{margin-top:8px;border:1px solid var(--border);border-radius:6px;text-align:center;padding:4px 0;color:var(--primary)}
+@media (max-width:820px){.todo{grid-template-columns:auto minmax(0,1fr)}.todo-a{grid-column:1/-1;justify-content:flex-start}.risk{grid-template-columns:auto minmax(0,1fr)}.risk>:last-child{grid-column:2}.sum-n:first-of-type{border-left:0}}
+/* settings */
+.set{display:grid;grid-template-columns:200px minmax(0,1fr);gap:24px;padding:20px;border-bottom:1px solid var(--divider)}
+.set:last-child{border-bottom:0}
+.set h3{margin:0;font-size:14px;font-weight:500}
+.set p{margin:2px 0 0;font-size:12px;color:var(--text-3)}
+.set .ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+.toast{position:fixed;top:calc(68px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:var(--panel);color:var(--text);border-radius:8px;box-shadow:var(--shadow-lg);padding:10px 16px;z-index:60;display:flex;gap:8px;align-items:center;max-width:calc(100% - 32px);border:1px solid var(--border)}
+.toast .i{color:var(--green)}
+
+.pop{position:fixed;z-index:45;top:calc(52px + env(safe-area-inset-top,0px));right:max(24px,env(safe-area-inset-right,0px));width:min(360px,calc(100% - 32px));background:var(--panel);border-radius:8px;box-shadow:var(--shadow-lg);border:1px solid var(--border)}
+.pop-h{padding:12px 16px;border-bottom:1px solid var(--divider);font-weight:600;display:flex;justify-content:space-between}
+.pop-b{max-height:360px;overflow:auto;padding:4px 16px}
+
+.login{position:fixed;inset:0;z-index:70;background:var(--bg);display:grid;place-items:center;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.login-card{width:min(400px,100%);padding:36px 32px;display:grid;gap:18px;box-shadow:var(--shadow)}
+
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.g2{grid-template-columns:minmax(0,1fr)}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat:nth-child(3){border-left:0}.stat:nth-child(n+3){border-top:1px solid var(--divider)}}
+@media (max-width:820px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:fixed;left:0;top:0;bottom:0;width:240px;transform:translateX(-100%);transition:transform .2s;box-shadow:var(--shadow-lg)}
+  .side.open{transform:none}
+  .burger{display:grid}
+  .header{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+  .content{padding-block:12px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .hide-m{display:none!important}
+  .kpis{gap:12px}
+  .kpi{padding:14px 16px}
+  .kpi-v{font-size:22px;line-height:30px}
+  .kpi-ic{width:30px;height:30px}
+  .donut-wrap{grid-template-columns:minmax(0,1fr);justify-items:center}
+  .dl{width:100%}
+  .hello h1{font-size:20px}
+  .mlist{display:block}
+  .stat{padding:14px 16px}
+  .stat .v{font-size:22px;line-height:32px}
+  .day{min-height:56px;padding:3px}
+  .chip span{display:none}
+  .chip{padding:2px;background:none;width:auto}
+  .fg,.desc{grid-template-columns:minmax(0,1fr)}
+  .modal{top:auto;bottom:0;left:0;transform:none;width:100%!important;max-height:92%;border-radius:12px 12px 0 0;padding-bottom:env(safe-area-inset-bottom,0px)}
+  .set{grid-template-columns:minmax(0,1fr);gap:10px}
+  .search{width:100%}
+  .toolbar .sp{display:none}
+  .steps .stp span:not(.k){display:none}
+  .h-r .btn span{display:none}
+  .h-r .btn{padding:0 8px}
+}
+</style>
+
+<div class="app">
+  <div class="skin" id="skin" aria-hidden="true"></div>
+  <aside class="side" id="side"></aside>
+  <div class="mainc">
+    <header class="header">
+      <button class="icon-btn burger" data-burger aria-label="打开菜单"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <div class="crumb" id="crumb"></div>
+      <div class="h-r" id="hr"></div>
+    </header>
+    <main class="content"><div class="wrap" id="view"></div></main>
+  </div>
+</div>
+<div id="layer"></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<div class="tip" id="tip" hidden></div>
+<div class="login" id="login" hidden>
+  <form class="card login-card" id="loginForm">
+    <div class="logo-row" style="padding:0;border:0;height:auto"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 7h14M5 12h14M5 17h8"/></svg></span>账号簿</div>
+    <div><div style="font-size:20px;font-weight:600;line-height:28px">登录</div><div class="t3" style="font-size:13px">个人账号与订阅管理</div></div>
+    <div class="f"><label for="lg-pw">密码</label><input class="inp" type="password" id="lg-pw" value="example-pass" autocomplete="off"></div>
+    <div class="f"><label for="lg-otp">两步验证码</label><input class="inp" type="text" id="lg-otp" placeholder="请输入验证器中的 6 位数字" inputmode="numeric"></div>
+    <label class="sw"><input type="checkbox" id="lg-keep" checked>30 天内免登录</label>
+    <button class="btn btn-primary" style="height:40px">登录</button>
+  </form>
+</div>
+
+<script>
+const DAY = 86400000;
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+const D = n => new Date(TODAY.getTime() + n * DAY);
+const pad = n => String(n).padStart(2, '0');
+const fmt = d => d ? `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}` : '—';
+const WEEK = ['周日','周一','周二','周三','周四','周五','周六'];
+const diff = d => Math.round((d - TODAY) / DAY);
+const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function addCycle(d, cycle, k) {
+  const n = new Date(d);
+  if (cycle === 'week') n.setDate(n.getDate() + 7 * k);
+  else n.setMonth(n.getMonth() + ({month:1, quarter:3, year:12}[cycle]) * k);
+  return n;
+}
+
+const settings = { remindDays: 7 };
+const CYCLE = { week:'周付', month:'月付', quarter:'季付', year:'年付' };
+const UNIT = { week:'周', month:'月', quarter:'季', year:'年' };
+const PER_MONTH = { week:52/12, month:1, quarter:1/3, year:1/12 };
+const CHANNELS = ['Apple App Store','Google Play','官网 · 信用卡','PayPal','支付宝','微信支付','其他'];
+const CATS = ['AI','开发工具','影音','存储','工具','设计','学习'];
+const BRAND = { Claude:'#C96442', ChatGPT:'#10A37F', Perplexity:'#1F7F8A', Midjourney:'#3B3C42', 'iCloud+':'#2F84E8', Cursor:'#2B2D33', 'GitHub Copilot':'#33393F', 'YouTube Premium':'#E0251B', Spotify:'#1AA34A', '1Password':'#1366D6', '网易云音乐':'#C7242C', '爱奇艺':'#0BA33B', 'Affinity Photo 2':'#7351C9', Notion:'#3D3B36', Figma:'#E4572E', Duolingo:'#4FA802', Gmail:'#D93F33', Outlook:'#0F6CBD', iCloud:'#2F84E8', 'QQ 邮箱':'#1A9FE0' };
+const brand = n => BRAND[n] || `hsl(${[...n].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 0)} 45% 45%)`;
+const blogo = (n, sz = '') => `<span class="blogo ${sz}" style="background:${brand(n)}" aria-hidden="true">${esc([...n.trim()][0].toUpperCase())}</span>`;
+
+const emails = [
+  { id:'e1', addr:'alex.work@gmail.com', provider:'Gmail', phone:'+86 138 1234 5678', recovery:'alex.backup@qq.com', note:'主力号' },
+  { id:'e2', addr:'alex.dev@outlook.com', provider:'Outlook', phone:'+1 415 555 0199', recovery:'alex.work@gmail.com', note:'开发者工具、海外服务' },
+  { id:'e3', addr:'alex.us@icloud.com', provider:'iCloud', phone:'+86 139 8765 2210', recovery:'', note:'Apple ID，App Store 扣费账号' },
+  { id:'e4', addr:'alex.backup@qq.com', provider:'QQ 邮箱', phone:'+86 138 1234 5678', recovery:'alex.work@gmail.com', note:'国内影音会员' },
+];
+const shown = new Set();
+const maskPhone = p => p.replace(/(\d{3,4})(\s?)(\d{4})$/, (m, a, s, b) => '****' + s + b);
+
+let seq = 0;
+function S(o) {
+  const s = Object.assign({ id:'s' + (++seq), status:'active', kind:'sub', cycle:'month', auto:true, trialEnd:null, history:[], url:'', manage:'', note:'', pay:'', channel:'' }, o);
+  if (o.next != null) s.next = D(o.next);
+  if (o.trial != null) { s.trialEnd = D(o.trial); s.next = s.trialEnd; }
+  if (o.bought != null) { s.next = null; s.history = [{ date:D(o.bought), amount:s.price }]; }
+  if (o.paid) s.history = Array.from({ length:o.paid }, (_, i) => ({ date:addCycle(s.next, s.cycle, -(i + 1)), amount:s.price }));
+  delete s.paid; delete s.trial; delete s.bought;
+  return s;
+}
+const subs = [
+  S({ name:'Claude', plan:'Pro', email:'e1', cat:'AI', price:148, channel:'Apple App Store', pay:'alex.us@icloud.com', next:3, paid:8, url:'https://claude.ai', manage:'https://apps.apple.com/account/subscriptions', note:'在 iPhone 上的 Claude App 里订阅' }),
+  S({ name:'ChatGPT', plan:'Plus', email:'e2', cat:'AI', price:145, channel:'官网 · 信用卡', pay:'招行信用卡 尾号 1234', next:12, paid:14, url:'https://chatgpt.com', manage:'https://chatgpt.com' }),
+  S({ name:'Perplexity', plan:'Pro', email:'e1', cat:'AI', price:145, channel:'官网 · 信用卡', pay:'Visa 尾号 8821', trial:6, url:'https://www.perplexity.ai', manage:'https://www.perplexity.ai/settings', note:'试用结束前决定要不要留' }),
+  S({ name:'Midjourney', plan:'Basic', email:'e2', cat:'AI', price:72, channel:'官网 · 信用卡', pay:'Visa 尾号 8821', next:-2, paid:4, auto:false, url:'https://www.midjourney.com', manage:'https://www.midjourney.com/account' }),
+  S({ name:'iCloud+', plan:'200GB', email:'e3', cat:'存储', price:21, channel:'Apple App Store', pay:'alex.us@icloud.com', next:7, paid:20, manage:'https://apps.apple.com/account/subscriptions' }),
+  S({ name:'Cursor', plan:'Pro', email:'e2', cat:'开发工具', price:1380, cycle:'year', channel:'官网 · 信用卡', pay:'Visa 尾号 8821', next:146, paid:1, url:'https://cursor.com', manage:'https://cursor.com/settings' }),
+  S({ name:'GitHub Copilot', plan:'Individual', email:'e2', cat:'开发工具', price:72, channel:'PayPal', pay:'alex.dev@outlook.com', trial:21, url:'https://github.com', manage:'https://github.com/settings/billing' }),
+  S({ name:'YouTube Premium', plan:'个人', email:'e1', cat:'影音', price:98, channel:'Google Play', pay:'alex.work@gmail.com', next:26, paid:10, url:'https://youtube.com', manage:'https://play.google.com/store/account/subscriptions' }),
+  S({ name:'Spotify', plan:'Premium', email:'e1', cat:'影音', price:85, channel:'PayPal', pay:'alex.work@gmail.com', next:20, paid:5, auto:false, status:'cancelled', url:'https://spotify.com', note:'已取消续费，用到到期为止' }),
+  S({ name:'1Password', plan:'个人版', email:'e1', cat:'工具', price:258, cycle:'year', channel:'PayPal', pay:'alex.work@gmail.com', next:58, paid:2, url:'https://1password.com' }),
+  S({ name:'网易云音乐', plan:'黑胶 VIP', email:'e4', cat:'影音', price:158, cycle:'year', channel:'微信支付', pay:'零钱', next:201, paid:2, url:'https://music.163.com' }),
+  S({ name:'爱奇艺', plan:'黄金 VIP', email:'e4', cat:'影音', price:68, cycle:'quarter', channel:'支付宝', pay:'138****5678', next:40, paid:3, url:'https://www.iqiyi.com' }),
+  S({ name:'Affinity Photo 2', plan:'永久授权', email:'e1', cat:'设计', kind:'once', price:498, channel:'官网 · 信用卡', pay:'Visa 尾号 8821', bought:-300, auto:false, url:'https://affinity.serif.com' }),
+  S({ name:'Notion', plan:'Free', email:'e1', cat:'工具', kind:'free', price:0, url:'https://notion.so' }),
+  S({ name:'Figma', plan:'Starter', email:'e2', cat:'设计', kind:'free', price:0, url:'https://figma.com' }),
+  S({ name:'Duolingo', plan:'免费版', email:'e4', cat:'学习', kind:'free', price:0, url:'https://duolingo.com' }),
+];
+
+const EXTRA = [['Netflix','标准','影音',68,'month'],['Disney+','高级','影音',89,'month'],['Apple Music','个人','影音',11,'month'],['Microsoft 365','家庭','工具',398,'year'],['Dropbox','Plus','存储',85,'month'],['Google One','2TB','存储',75,'month'],['Notion AI','Plus','AI',75,'month'],['Grammarly','Premium','工具',216,'quarter'],['Canva','Pro','设计',89,'month'],['Adobe CC','摄影计划','设计',88,'month'],['腾讯视频','VIP','影音',30,'month'],['哔哩哔哩','大会员','影音',148,'year'],['百度网盘','超级会员','存储',30,'month'],['QQ 音乐','绿钻','影音',18,'month'],['WPS','超级会员','工具',179,'year'],['Raycast','Pro','工具',58,'month'],['Setapp','个人','工具',72,'month'],['Linear','Basic','开发工具',58,'month'],['Vercel','Pro','开发工具',145,'month'],['JetBrains','All Products','开发工具',2088,'year'],['DeepL','Pro','AI',62,'month'],['Kimi','会员','AI',49,'month'],['Gemini','Advanced','AI',145,'month'],['Poe','订阅','AI',145,'month'],['阿里云','域名续费','开发工具',79,'year'],['Cloudflare','Pro','开发工具',145,'month'],['Surge','Mac 版','工具',356,'once'],['Things 3','Mac 版','工具',318,'once']];
+const PAYS = [['官网 · 信用卡','Visa 尾号 8821'],['Apple App Store','alex.us@icloud.com'],['支付宝','138****5678'],['PayPal','alex.work@gmail.com'],['官网 · 信用卡','招行信用卡 尾号 1234'],['微信支付','零钱']];
+EXTRA.forEach(([name, plan, cat, price, cyc], i) => {
+  const [channel, pay] = PAYS[i % PAYS.length], email = ['e1','e2','e3','e4'][i % 4];
+  subs.push(cyc === 'once' ? S({ name, plan, cat, price, email, kind:'once', channel, pay, bought:-(i * 23 % 400 + 20), auto:false })
+    : S({ name, plan, cat, price, email, cycle:cyc, channel, pay, next:(i * 37) % 280 + 9 + (cyc === 'month' ? -((i * 37) % 280) + (i * 7) % 28 : 0), paid:i % 6 + 1 }));
+});
+
+/* 登录方式 / 两步验证 */
+const LOGINS = { password:'邮箱 + 密码', google:'Google 一键登录', apple:'Apple 登录', phone:'手机号验证码', code:'邮箱验证码' };
+const MFAS = { app:'验证器 App', sms:'短信验证码', none:'未开启' };
+const LOGIN_SEED = { Claude:['google','none'], ChatGPT:['google','app'], Perplexity:['google','none'], Midjourney:['password','none'], 'iCloud+':['apple','app'], Cursor:['google','none'], 'GitHub Copilot':['password','app'], 'YouTube Premium':['google','app'], Spotify:['password','none'], '1Password':['password','app'], '网易云音乐':['phone','sms'], '爱奇艺':['phone','sms'], Notion:['google','none'], Figma:['google','none'] };
+subs.forEach((s, i) => { const v = LOGIN_SEED[s.name] || [['password','google','phone','apple'][i % 4], ['app','none','sms'][i % 3]]; s.login = v[0]; s.mfa = v[1]; });
+
+/* 支付方式 */
+const payMethods = [
+  { id:'p1', name:'招行信用卡 尾号 1234', type:'信用卡', expire:new Date(TODAY.getFullYear() + 2, 2, 31), note:'主力卡，账单日每月 5 号' },
+  { id:'p2', name:'Visa 尾号 8821', type:'信用卡', expire:new Date(TODAY.getFullYear(), TODAY.getMonth() + 2, 0), note:'海外消费用' },
+  { id:'p3', name:'alex.us@icloud.com', type:'Apple ID', expire:null, note:'App Store 订阅从这里扣，背后绑定招行卡' },
+  { id:'p4', name:'alex.work@gmail.com', type:'PayPal / Google Play', expire:null, note:'' },
+  { id:'p5', name:'alex.dev@outlook.com', type:'PayPal', expire:null, note:'' },
+  { id:'p6', name:'138****5678', type:'支付宝', expire:null, note:'' },
+  { id:'p7', name:'零钱', type:'微信支付', expire:null, note:'' },
+];
+const ym = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+const subsOfPay = p => subs.filter(s => s.pay === p.name && s.kind !== 'free');
+const payAlerts = () => payMethods.filter(p => p.expire && diff(p.expire) <= 60);
+
+/* 稍后提醒 */
+const snoozed = {};
+
+/* 取消指引（按渠道） */
+const GUIDES = {
+  'Apple App Store':['打开 iPhone「设置」', '点最上方的 Apple ID 名字', '进入「订阅」', '选择该服务，点「取消订阅」'],
+  'Google Play':['打开 Google Play 商店', '点右上角头像 →「付款和订阅」', '进入「订阅」，选择该服务', '点「取消订阅」'],
+  'PayPal':['登录 PayPal 网页版', '设置 →「付款」→「管理自动付款」', '找到该服务，点「取消」'],
+  '官网 · 信用卡':['登录服务官网', '进入账户设置里的「账单 / Billing / 订阅」', '点「取消订阅」或关闭自动续费'],
+  '支付宝':['打开支付宝 →「我的」→ 右上角「设置」', '「支付设置」→「免密支付/自动扣款」', '找到该服务，点「关闭服务」'],
+  '微信支付':['打开微信 →「我」→「服务」', '右上角「…」→「支付设置」→「自动续费」', '找到该服务，关闭自动续费'],
+  '其他':['登录服务官网，在账户或账单设置中取消'],
+};
+const guideHtml = s => `<ol class="guide">${(GUIDES[s.channel] || GUIDES['其他']).map(x => `<li>${esc(x)}</li>`).join('')}</ol>`;
+
+/* 服务模板 */
+const TEMPLATES = [
+  ['Claude','Pro','AI',148,'month','https://claude.ai','https://claude.ai/settings/billing'], ['ChatGPT','Plus','AI',145,'month','https://chatgpt.com','https://chatgpt.com'],
+  ['Gemini','Advanced','AI',145,'month','https://gemini.google.com','https://one.google.com'], ['Perplexity','Pro','AI',145,'month','https://www.perplexity.ai','https://www.perplexity.ai/settings'],
+  ['Midjourney','Basic','AI',72,'month','https://www.midjourney.com','https://www.midjourney.com/account'], ['Cursor','Pro','开发工具',1380,'year','https://cursor.com','https://cursor.com/settings'],
+  ['GitHub Copilot','Individual','开发工具',72,'month','https://github.com','https://github.com/settings/billing'], ['Netflix','标准','影音',68,'month','https://netflix.com','https://www.netflix.com/account'],
+  ['YouTube Premium','个人','影音',98,'month','https://youtube.com','https://www.youtube.com/paid_memberships'], ['Spotify','Premium','影音',85,'month','https://spotify.com','https://www.spotify.com/account'],
+  ['Disney+','高级','影音',89,'month','https://www.disneyplus.com','https://www.disneyplus.com/account'], ['iCloud+','200GB','存储',21,'month','https://www.icloud.com','https://apps.apple.com/account/subscriptions'],
+  ['Google One','2TB','存储',75,'month','https://one.google.com','https://one.google.com/settings'], ['Microsoft 365','家庭','工具',398,'year','https://www.microsoft.com/microsoft-365','https://account.microsoft.com/services'],
+  ['1Password','个人版','工具',258,'year','https://1password.com','https://my.1password.com'], ['Notion','Plus','工具',75,'month','https://notion.so','https://www.notion.so/settings'],
+  ['Figma','Professional','设计',108,'month','https://figma.com','https://www.figma.com/settings'], ['Canva','Pro','设计',89,'month','https://www.canva.cn','https://www.canva.cn/settings/billing'],
+  ['网易云音乐','黑胶 VIP','影音',158,'year','https://music.163.com',''], ['爱奇艺','黄金 VIP','影音',68,'quarter','https://www.iqiyi.com',''],
+  ['腾讯视频','VIP','影音',30,'month','https://v.qq.com',''], ['哔哩哔哩','大会员','影音',148,'year','https://www.bilibili.com',''], ['百度网盘','超级会员','存储',30,'month','https://pan.baidu.com',''],
+].map(([name, plan, cat, price, cycle, url, manage]) => ({ name, plan, cat, price, cycle, url, manage }));
+
+/* 分页 */
+const pg = {};
+let curDetail = null;
+function paged(key, rows, size) {
+  const st = pg[key] || (pg[key] = { page:1, size });
+  const pages = Math.max(1, Math.ceil(rows.length / st.size));
+  if (st.page > pages) st.page = pages;
+  return { items: rows.slice((st.page - 1) * st.size, st.page * st.size), page: st.page, size: st.size, pages, total: rows.length };
+}
+function pagerNav(key, p) {
+  if (p.pages <= 1) return '';
+  const nums = [];
+  for (let i = 1; i <= p.pages; i++) if (i === 1 || i === p.pages || Math.abs(i - p.page) <= 1) nums.push(i); else if (nums[nums.length - 1] !== '…') nums.push('…');
+  return `<div class="pager"><button data-pg="${key}" data-p="${p.page - 1}" ${p.page === 1 ? 'disabled' : ''} aria-label="上一页">${I('left')}</button>${nums.map(n => n === '…' ? '<span class="ellip">…</span>' : `<button data-pg="${key}" data-p="${n}" ${n === p.page ? 'aria-current="page"' : ''}>${n}</button>`).join('')}<button data-pg="${key}" data-p="${p.page + 1}" ${p.page === p.pages ? 'disabled' : ''} aria-label="下一页">${I('right')}</button></div>`;
+}
+function pager(key, p, left) {
+  return `<div class="tbl-foot"><span>${left || `共 ${p.total} 条`}</span><div class="pager-wrap">${pagerNav(key, p)}<select class="sel" style="height:28px" data-pgsize="${key}" aria-label="每页条数">${[10, 20, 50].map(n => `<option value="${n}" ${n === p.size ? 'selected' : ''}>${n} 条/页</option>`).join('')}</select></div></div>`;
+}
+
+const yuan = v => '¥' + v.toLocaleString('zh-CN', { minimumFractionDigits:2, maximumFractionDigits:2 });
+const yuan0 = v => '¥' + Math.round(v).toLocaleString('zh-CN');
+const mailOf = id => emails.find(e => e.id === id);
+const isLive = s => s.kind === 'sub' && s.status === 'active';
+const monthly = s => isLive(s) && !s.trialEnd ? s.price * PER_MONTH[s.cycle] : 0;
+const spent = s => s.history.reduce((a, h) => a + h.amount, 0);
+
+function state(s) {
+  const R = settings.remindDays;
+  if (s.kind === 'free') return { label:'仅注册', tone:'gray', group:'free' };
+  if (s.kind === 'once') return { label:'已买断', tone:'gray', group:'once' };
+  if (s.status === 'cancelled') return { label:'已取消', tone:'gray', group:'ended' };
+  if (s.status === 'expired') return { label:'已过期', tone:'red', group:'ended' };
+  if (s.trialEnd) {
+    const d = diff(s.trialEnd);
+    if (d < 0) return { label:'试用已结束', tone:'red', group:'trial', alert:true, d };
+    return { label:`试用中 · 剩 ${d} 天`, tone: d <= R ? 'orange' : 'purple', group:'trial', alert: d <= R, d };
+  }
+  const d = diff(s.next);
+  if (d < 0) return { label:`已过期 ${-d} 天`, tone:'red', group:'active', alert:true, d };
+  if (d <= R) return { label: d === 0 ? '今天到期' : `${d} 天后到期`, tone:'orange', group:'active', alert:true, d };
+  return { label:'使用中', tone:'green', group:'active', d };
+}
+const tag = (t, tone) => `<span class="tag tg-${tone}">${esc(t)}</span>`;
+const stag = s => { const st = state(s); return tag(st.label, st.tone); };
+const alerts = () => subs.filter(s => state(s).alert && !(snoozed[s.id] > TODAY)).sort((a, b) => state(a).d - state(b).d);
+const priceCell = s => s.kind === 'free' ? '<span class="t3">免费</span>' : `<span class="num">${yuan(s.price)}</span>`;
+const cycleCell = s => s.kind === 'free' ? '—' : s.kind === 'once' ? '一次性' : CYCLE[s.cycle];
+
+const P = {
+  note:'<path d="M5 4.5h14v10l-5 5H5z"/><path d="M14 19.5v-5h5M8.5 9h7M8.5 12.5h4"/>', pin:'<path d="M9 4h6l-1 5 3 3H7l3-3z"/><path d="M12 12v8"/>',
+  card:'<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/>', shield:'<path d="M12 3.5 19 6v5.5c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V6z"/><path d="m9 12 2 2 4-4"/>', ext:'<path d="M14 4.5h5.5V10M19.5 4.5 11 13M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>',
+  wallet:'<rect x="3.5" y="6" width="17" height="13" rx="2.5"/><path d="M3.5 9.5h17M15.5 14h2"/>', trend:'<path d="M4 19h16"/><path d="m5 15 4.5-4.5 3.5 3 6-6"/><path d="M15 7.5h4v4"/>', layers:'<path d="m12 4 8.5 4.5L12 13 3.5 8.5z"/><path d="m3.5 12.5 8.5 4.5 8.5-4.5"/>', skin:'<path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.4 0 1.9-1 1.4-2.1-.6-1.3.3-2.4 1.7-2.4H17a3.5 3.5 0 0 0 3.5-3.5c0-5-3.8-9-8.5-9z"/><circle cx="7.8" cy="11" r="1.1"/><circle cx="10.5" cy="7.6" r="1.1"/><circle cx="14.8" cy="7.8" r="1.1"/>',
+  home:'<path d="M4 10.5 12 4l8 6.5V20H15v-6H9v6H4z"/>', list:'<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/>',
+  mail:'<rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="m4 7 8 6 8-6"/>', cal:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+  bill:'<path d="M6 3.5h12V20l-3-1.8-3 1.8-3-1.8L6 20z"/><path d="M9.5 8h5M9.5 12h5"/>', gear:'<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M21 12h-2.5M5.5 12H3M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8M18.4 18.4l-1.8-1.8M7.4 7.4 5.6 5.6"/>',
+  bell:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>', search:'<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>', plus:'<path d="M12 5v14M5 12h14"/>', warn:'<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/>',
+  ok:'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>', left:'<path d="m14.5 6-6 6 6 6"/>', right:'<path d="m9.5 6 6 6-6 6"/>',
+  eye:'<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>', up:'<path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 15v3.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V15"/>',
+  down:'<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 15v3.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V15"/>', file:'<path d="M6 3.5h8l4 4V20.5H6z"/><path d="M14 3.5v4h4M9 13l2 2 4-4"/>',
+};
+const I = k => `<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${P[k]}</svg>`;
+
+let page = 'home';
+const filt = { q:'', email:'', channel:'', cat:'', group:'all' };
+const picked = new Set();
+let calMonth = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+let billYear = TODAY.getFullYear();
+const PAGES = { home:['工作台','home'], subs:['订阅管理','list'], mails:['邮箱账号','mail'], pays:['支付方式','card'], notes:['备注卡片','note'], security:['账号安全','shield'], cal:['扣费日历','cal'], bills:['付费记录','bill'], settings:['系统设置','gear'] };
+
+function renderShell() {
+  const n = alerts().length, hr = risks().filter(r => r.lv !== 'low').length;
+  const item = k => `<button class="m-item" data-nav="${k}" ${page === k ? 'aria-current="page"' : ''}>${I(PAGES[k][1])}<span>${PAGES[k][0]}</span>${k === 'subs' && n ? `<span class="m-badge">${n}</span>` : ''}${k === 'security' && hr ? `<span class="m-badge" style="background:var(--orange)">${hr}</span>` : ''}</button>`;
+  document.getElementById('side').innerHTML = `<div class="logo-row"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 7h14M5 12h14M5 17h8"/></svg></span>账号簿</div>
+    <nav class="menu">${item('home')}<div class="menu-label">管理</div>${item('subs')}${item('mails')}${item('pays')}${item('notes')}${item('security')}<div class="menu-label">账单</div>${item('cal')}${item('bills')}<div class="menu-label">系统</div>${item('settings')}</nav>
+    <div class="side-foot"><span class="avatar">我</span><div style="min-width:0;flex:1"><div>管理员</div><div class="t3" style="font-size:12px">已开启两步验证</div></div><button class="btn-text" data-logout style="font-size:13px">退出</button></div>`;
+  document.getElementById('crumb').innerHTML = `<b>${PAGES[page][0]}</b>`;
+  document.getElementById('hr').innerHTML = `<button class="icon-btn" data-skins aria-label="更换皮肤" title="更换皮肤">${I('skin')}</button><button class="icon-btn" data-bell aria-label="到期提醒">${I('bell')}${n ? `<span class="dot">${n}</span>` : ''}</button>
+    <button class="btn btn-primary btn-sm" data-add style="margin-left:8px">${I('plus')}<span>新建订阅</span></button>`;
+}
+function render() {
+  renderShell();
+  document.getElementById('view').innerHTML = { home:vHome, subs:vSubs, mails:vMails, cal:vCal, bills:vBills, notes:vNotes, pays:vPays, security:vSecurity, settings:vSettings }[page]();
+  if (page === 'subs') bindSubs();
+  if (page === 'notes') bindNotes();
+}
+
+/* ---------- 皮肤 ---------- */
+const svgURI = s => `url("data:image/svg+xml,${encodeURIComponent(s)}")`;
+const SK = (g1, g2, body) => `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 280' preserveAspectRatio='xMidYMin slice'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='${g1}'/><stop offset='1' stop-color='${g2}'/></linearGradient></defs><rect width='1440' height='280' fill='url(#g)'/>${body}</svg>`;
+const SKINS = {
+  none:  { name:'简洁', svg:null },
+  sky:   { name:'晴空', svg:SK('#B9D2FF', '#EDF3FF', `<g fill='#fff' opacity='.9'><ellipse cx='1170' cy='78' rx='120' ry='30'/><ellipse cx='1240' cy='60' rx='72' ry='36'/><ellipse cx='1100' cy='70' rx='58' ry='24'/><ellipse cx='520' cy='128' rx='92' ry='22'/><ellipse cx='570' cy='112' rx='56' ry='28'/></g><g fill='#fff' opacity='.55'><ellipse cx='860' cy='44' rx='76' ry='14'/><ellipse cx='260' cy='70' rx='64' ry='13'/><ellipse cx='1380' cy='150' rx='70' ry='14'/></g>`) },
+  hills: { name:'远山', svg:SK('#CFEBDF', '#F2F8F5', `<circle cx='1210' cy='70' r='34' fill='#FFF4CF' opacity='.9'/><path d='M0 150 Q160 92 330 132 T690 118 T1050 136 T1440 104 V280 H0Z' fill='#BFE0D0'/><path d='M0 186 Q240 128 470 170 T950 160 T1440 172 V280 H0Z' fill='#A3D2BD' opacity='.85'/>`) },
+  sea:   { name:'海风', svg:SK('#C3E3F6', '#EEF8FD', `<path d='M0 140 C180 110 360 170 540 140 S900 110 1080 140 1340 160 1440 132 V280 H0Z' fill='#AAD5EE' opacity='.75'/><path d='M0 176 C200 150 400 200 620 172 S1000 150 1200 176 1380 186 1440 168 V280 H0Z' fill='#8EC5E6' opacity='.55'/><g fill='#fff' opacity='.7'><ellipse cx='300' cy='60' rx='70' ry='14'/><ellipse cx='1100' cy='48' rx='90' ry='16'/></g>`) },
+  dusk:  { name:'晚霞', svg:SK('#FFD3C2', '#FFF3EC', `<circle cx='1130' cy='120' r='62' fill='#FFB48C' opacity='.55'/><path d='M0 160 Q200 110 420 150 T880 138 T1440 150 V280 H0Z' fill='#F5C4AE' opacity='.8'/><path d='M0 196 Q300 150 620 186 T1440 178 V280 H0Z' fill='#EBAE97' opacity='.6'/>`) },
+  sakura:{ name:'樱粉', svg:SK('#F6C4D8', '#FFF1F6', `<g fill='#F3A9C3' opacity='.7'><ellipse cx='1060' cy='60' rx='9' ry='5' transform='rotate(30 1060 60)'/><ellipse cx='1180' cy='110' rx='8' ry='4.5' transform='rotate(-20 1180 110)'/><ellipse cx='1300' cy='48' rx='10' ry='5' transform='rotate(50 1300 48)'/><ellipse cx='960' cy='130' rx='7' ry='4' transform='rotate(10 960 130)'/><ellipse cx='1380' cy='140' rx='9' ry='5' transform='rotate(-40 1380 140)'/><ellipse cx='380' cy='90' rx='8' ry='4.5' transform='rotate(25 380 90)'/><ellipse cx='620' cy='40' rx='7' ry='4' transform='rotate(-30 620 40)'/></g><g fill='#fff' opacity='.6'><circle cx='1240' cy='80' r='3'/><circle cx='820' cy='70' r='2.5'/><circle cx='500' cy='130' r='3'/></g>`) },
+};
+let skin = 'sky';
+try { const v = localStorage.getItem('accountlist-skin'); if (v && SKINS[v]) skin = v; } catch (e) {}
+function applySkin() {
+  const el = document.getElementById('skin');
+  el.style.backgroundImage = SKINS[skin].svg ? svgURI(SKINS[skin].svg) : 'none';
+  document.documentElement.classList.toggle('skinned', !!SKINS[skin].svg);
+}
+function openSkins() {
+  layer(`<div class="mask" data-close style="background:transparent"></div><div class="pop" role="dialog" aria-label="更换皮肤"><div class="pop-h"><span>更换皮肤</span></div>
+    <div class="skins">${Object.entries(SKINS).map(([k, v]) => `<button class="sk" data-skin="${k}" aria-pressed="${skin === k}"><i style="background-image:${v.svg ? svgURI(v.svg).replace(/"/g, '&quot;') : 'none'};${v.svg ? '' : 'background:var(--fill)'}"></i><span>${v.name}</span></button>`).join('')}</div></div>`);
+}
+
+/* ---------- 工作台 ---------- */
+function monthTotals() {
+  const out = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(TODAY.getFullYear(), TODAY.getMonth() - i, 1), y = d.getFullYear(), m = d.getMonth();
+    let paid = 0, due = 0;
+    subs.forEach(s => s.history.forEach(h => { if (h.date.getFullYear() === y && h.date.getMonth() === m && h.date <= TODAY) paid += h.amount; }));
+    if (i === 0) Object.values(eventsIn(y, m)).flat().forEach(e => { if (e.type !== 'paid') due += e.amount; });
+    out.push({ y, m, paid, due });
+  }
+  return out;
+}
+function trendChart(data) {
+  const W = 640, H = 220, L = 48, R = 8, T = 12, B = 28;
+  const max = Math.max(...data.map(d => d.paid + d.due));
+  const step = [100, 200, 250, 500, 1000, 2000, 2500, 5000].find(s => max / s <= 4) || 5000;
+  const top = Math.ceil(max / step) * step || step;
+  const y = v => T + (H - T - B) * (1 - v / top);
+  const band = (W - L - R) / data.length, bw = Math.min(26, band * .5);
+  let g = '';
+  for (let v = 0; v <= top; v += step) g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--divider)" ${v ? 'stroke-dasharray="3 4"' : ''}/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--text-3)">${v >= 1000 ? (v / 1000) + 'k' : v}</text>`;
+  const bar = (x, y0, y1, fill, roundTop) => { const h = y0 - y1; if (h <= 0) return ''; return roundTop && h > 4 ? `<rect x="${x}" y="${y1}" width="${bw}" height="${h}" rx="4" fill="${fill}"/><rect x="${x}" y="${y0 - Math.min(4, h)}" width="${bw}" height="${Math.min(4, h)}" fill="${fill}"/>` : `<rect x="${x}" y="${y1}" width="${bw}" height="${h}" fill="${fill}"/>`; };
+  data.forEach((d, i) => {
+    const x = L + band * i + (band - bw) / 2, cur = i === data.length - 1;
+    const yp = y(d.paid), yd = y(d.paid + d.due);
+    g += bar(x, y(0), yp, 'var(--c1)', !d.due);
+    if (d.due) g += bar(x, yp - (d.paid ? 2 : 0), yd, 'var(--c1-soft)', true);
+    g += `<text x="${x + bw / 2}" y="${H - 8}" text-anchor="middle" font-size="11" fill="${cur ? 'var(--text)' : 'var(--text-3)'}" ${cur ? 'font-weight="600"' : ''}>${d.m + 1}月</text>`;
+    g += `<rect x="${L + band * i}" y="${T}" width="${band}" height="${H - T - B}" fill="transparent" data-tip="${d.y}年${d.m + 1}月｜已支出 ${yuan(d.paid)}${d.due ? '｜待扣费 ' + yuan(d.due) : ''}"/>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="近 12 个月支出柱状图">${g}</svg>`;
+}
+function donut(cats, total) {
+  const r = 58, c = 2 * Math.PI * r; let off = 0;
+  const segs = cats.map(([n, v], i) => { const len = v / total * c, seg = `<circle r="${r}" cx="80" cy="80" fill="none" stroke="var(--c${Math.min(i + 1, 6)})" stroke-width="18" stroke-dasharray="${Math.max(len - 2, .5)} ${c}" stroke-dashoffset="${-off}" transform="rotate(-90 80 80)" data-tip="${esc(n)}｜${yuan0(v)}/月｜${(v / total * 100).toFixed(0)}%"/>`; off += len; return seg; }).join('');
+  return `<svg viewBox="0 0 160 160" width="150" height="150" role="img" aria-label="月支出构成环形图"><circle r="${r}" cx="80" cy="80" fill="none" stroke="var(--fill)" stroke-width="18"/>${segs}<text x="80" y="76" text-anchor="middle" font-size="11" fill="var(--text-3)">每月合计</text><text x="80" y="96" text-anchor="middle" font-size="18" font-weight="600" fill="var(--text)">${yuan0(total)}</text></svg>`;
+}
+let homeTab = 'todo';
+function vHome() {
+  const al = alerts();
+  const m = subs.reduce((a, s) => a + monthly(s), 0);
+  const y = TODAY.getFullYear();
+  const spentY = subs.reduce((a, s) => a + s.history.filter(h => h.date.getFullYear() === y && h.date <= TODAY).reduce((p, h) => p + h.amount, 0), 0);
+  const live = subs.filter(isLive), trials = live.filter(s => s.trialEnd);
+  const up = subs.filter(s => isLive(s) && s.next && diff(s.next) >= 0 && diff(s.next) <= 30).sort((a, b) => a.next - b.next);
+  const byCat = {}; subs.forEach(s => { const v = monthly(s); if (v) byCat[s.cat] = (byCat[s.cat] || 0) + v; });
+  const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+  const mt = monthTotals(), cur = mt[mt.length - 1], prev = mt[mt.length - 2];
+  const h = new Date().getHours(), greet = h < 6 ? '夜深了' : h < 12 ? '早上好' : h < 18 ? '下午好' : '晚上好';
+  const byMail = emails.map(e => ({ e, n: subs.filter(s => s.email === e.id).length, m: subs.filter(s => s.email === e.id).reduce((a, s) => a + monthly(s), 0) }));
+  const mMax = Math.max(...byMail.map(x => x.m)) || 1;
+  const PU = paged('hup', up, 5), PT = paged('htrial', trials, 5), PE = paged('hmail', byMail, 5);
+  const pa = payAlerts(), todoN = al.length + pa.length, snz = subs.filter(s => snoozed[s.id] > TODAY);
+  const PD = paged('htodo', [...al.map(s => ({ s })), ...pa.map(p => ({ p }))], 5);
+  const snoozeSel = s => `<select class="sel snooze" data-snooze="${s.id}" aria-label="稍后提醒"><option value="">稍后提醒</option><option value="1">明天再提醒</option><option value="3">3 天后提醒</option><option value="7">7 天后提醒</option></select>`;
+  const todoRow = ({ s, p }) => p ? `<div class="todo"><span class="pay-ic lg">${I('card')}</span><div style="min-width:0"><div class="nm">${esc(p.name)} 即将过期 ${tag('支付方式', 'orange')}</div><div class="t3 ell" style="font-size:12px">${ym(p.expire)} 到期 · 绑定 ${subsOfPay(p).length} 个订阅，换卡后需要逐个更新</div></div><div class="todo-a"><button class="btn btn-sm" data-paysubs="${p.id}">查看订阅</button></div></div>`
+    : (st => `<div class="todo">${blogo(s.name, 'md')}<div style="min-width:0"><div class="nm"><a href="#" class="lnk" data-open="${s.id}">${esc(s.name)} ${esc(s.plan)}</a>${tag(st.label, st.tone)}</div>
+      <div class="t3 ell" style="font-size:12px">${s.trialEnd ? `${fmt(s.trialEnd)} 试用结束，之后 ${yuan(s.price)}/${UNIT[s.cycle]}` : st.d < 0 ? `${fmt(s.next)} 已到期，没有开启自动续费` : `${fmt(s.next)} 扣费 ${yuan(s.price)} · ${esc(s.channel)}`}</div></div>
+      <div class="todo-a">${s.trialEnd ? `<button class="btn btn-sm" data-cancelflow="${s.id}">不要了</button><button class="btn btn-sm btn-primary" data-convert="${s.id}">保留</button>` : `<button class="btn btn-sm" data-cancelflow="${s.id}">不续了</button><button class="btn btn-sm btn-primary" data-renew="${s.id}">已续费</button>`}${snoozeSel(s)}</div></div>`)(state(s));
+  const HTABS = [['todo', '待办', todoN], ['up', '即将扣费', up.length], ['spend', '支出分析'], ['trial', '试用中', trials.length], ['mail', '按邮箱']];
+  const kpi = (ic, tone, l, v, s) => `<div class="card kpi"><div class="kpi-top"><span class="kpi-l">${l}</span><span class="kpi-ic" style="background:var(--${tone}-soft);color:var(--${tone})">${I(ic)}</span></div><div class="kpi-v num">${v}</div><div class="kpi-s">${s}</div></div>`;
+
+  return `<div class="hello"><div><h1>${greet}，管理员</h1><p>今天是 ${y} 年 ${TODAY.getMonth() + 1} 月 ${TODAY.getDate()} 日 ${WEEK[TODAY.getDay()]}，本月还有 <b class="num">${yuan(cur.due)}</b> 待扣费</p></div></div>
+  ${todoN && homeTab !== 'todo' ? `<div class="alert">${I('warn')}<div class="grow"><b>你有 ${todoN} 项待办：</b>${al.length ? `${al.length} 个订阅即将到期或已过期` : ''}${al.length && pa.length ? '，' : ''}${pa.length ? `${pa.length} 个支付方式即将过期` : ''}</div><button class="btn-text" data-htab="todo">去处理</button></div>` : ''}
+  <section class="kpis">
+    ${kpi('wallet', 'blue', '每月固定支出', yuan0(m), `折合每天 ${yuan(m / 30)}`)}
+    ${kpi('bill', 'green', `${y} 年已支出`, yuan0(spentY), `上月 ${yuan0(prev.paid)} · 本月已付 ${yuan0(cur.paid)}`)}
+    ${kpi('trend', 'orange', '全年预计支出', yuan0(m * 12), '按当前在用订阅推算')}
+    ${kpi('layers', 'purple', '在用订阅', `${live.length - trials.length}<small> 个</small>`, `试用 ${trials.length} 个 · 仅注册 ${subs.filter(s => s.kind === 'free').length} 个`)}
+  </section>
+  <section class="card">
+    <div class="tabs" role="tablist">${HTABS.map(([k, t, n]) => `<button class="tab" role="tab" data-htab="${k}" aria-selected="${homeTab === k}">${t}${n != null ? `<span class="n">${n}</span>` : ''}</button>`).join('')}</div>
+    ${homeTab === 'todo' ? `<div class="card-b" style="padding-top:4px">${PD.items.map(todoRow).join('') || `<div class="empty">${I('ok')}<div style="margin-top:6px">待办都处理完了</div></div>`}
+        <div class="tab-foot"><span>${snz.length ? `已稍后提醒 ${snz.length} 项：${snz.map(s => esc(s.name)).join('、')} <button class="btn-text" data-unsnooze>全部恢复</button>` : '处理完的待办会自动消失；不想马上处理可以选「稍后提醒」'}</span>${pagerNav('htodo', PD)}</div></div>` : ''}
+    ${homeTab === 'up' ? `<div class="card-b" style="padding-top:8px">${PU.items.map(s => `<div class="up" data-open="${s.id}"><div class="dbox"><b class="num">${s.next.getDate()}</b><span>${s.next.getMonth() + 1}月 ${WEEK[s.next.getDay()]}</span></div>
+        <div class="up-m">${blogo(s.name, 'md')}<div style="min-width:0"><div class="nm ell">${esc(s.name)} <span class="t3">${esc(s.plan)}</span></div><div class="t3 ell" style="font-size:12px">${esc(mailOf(s.email).addr)} · ${esc(s.channel)}</div></div></div>
+        <div class="up-r"><b class="num">${yuan(s.price)}</b>${stag(s)}</div></div>`).join('') || '<div class="empty">30 天内没有扣费</div>'}
+        <div class="tab-foot"><span>未来 30 天共 ${up.length} 笔，合计 <b class="num">${yuan(up.reduce((a, s) => a + s.price, 0))}</b></span><div class="pager-wrap">${pagerNav('hup', PU)}<button class="btn-text" data-nav="cal">查看扣费日历</button></div></div></div>` : ''}
+    ${homeTab === 'spend' ? `<div class="spend">
+        <div><div class="sub-h"><b>近 12 个月支出</b><span class="legend-s"><span><i style="background:var(--c1)"></i>已支出</span><span><i style="background:var(--c1-soft)"></i>本月待扣</span></span></div><div class="chart">${trendChart(mt)}</div></div>
+        <div><div class="sub-h"><b>月支出构成</b><span class="t3" style="font-size:12px">按分类</span></div><div class="donut-wrap">${donut(cats, m)}<div class="dl">${cats.map(([c, v], i) => `<div class="dl-row"><i style="background:var(--c${Math.min(i + 1, 6)})"></i><span>${esc(c)}</span><span class="num t3">${(v / m * 100).toFixed(0)}%</span><b class="num">${yuan0(v)}</b></div>`).join('')}</div></div></div>
+      </div>` : ''}
+    ${homeTab === 'trial' ? `<div class="card-b" style="padding-top:8px">${PT.items.map(s => `<div class="li" data-open="${s.id}">${blogo(s.name, 'md')}<div class="grow"><div class="nm">${esc(s.name)} ${esc(s.plan)}</div><div class="t3" style="font-size:12px">${esc(mailOf(s.email).addr)} · ${fmt(s.trialEnd)} 起 ${yuan(s.price)}/${UNIT[s.cycle]}</div></div>${stag(s)}</div>`).join('') || '<div class="empty">暂无试用中的服务</div>'}
+        <div class="tab-foot"><span>全部转正后每月增加 <b class="num">${yuan0(trials.reduce((a, s) => a + s.price * PER_MONTH[s.cycle], 0))}</b></span>${pagerNav('htrial', PT)}</div></div>` : ''}
+    ${homeTab === 'mail' ? `<div class="card-b" style="padding-top:8px">${PE.items.map(x => `<div class="li" data-mail="${x.e.id}">${blogo(x.e.provider, 'md')}<div class="grow"><div class="nm ell" style="display:flex;justify-content:space-between;gap:8px"><span class="ell">${esc(x.e.addr)}</span><b class="num" style="font-weight:500">${yuan0(x.m)}<span class="t3" style="font-weight:400">/月</span></b></div><div class="mbar"><i style="width:${(x.m / mMax * 100).toFixed(0)}%"></i></div><div class="t3" style="font-size:12px">${x.n} 个服务 · ${esc(x.e.note)}</div></div></div>`).join('')}
+        <div class="tab-foot"><span>${emails.length} 个邮箱</span><div class="pager-wrap">${pagerNav('hmail', PE)}<button class="btn-text" data-nav="mails">管理邮箱</button></div></div></div>` : ''}
+  </section>`;
+}
+
+/* ---------- 备注卡片 ---------- */
+const NOTE_COLORS = [['yellow','便签黄'],['blue','天空蓝'],['green','薄荷绿'],['pink','樱花粉'],['purple','薰衣草'],['gray','素白']];
+const sid = n => (subs.find(s => s.name === n) || {}).id;
+const notes = [
+  { id:'n1', ttype:'sub', tid:sid('Claude'), title:'怎么取消 Claude 订阅', body:'在 iPhone 上订阅的，网页里取消不了。\n路径：设置 → Apple ID → 订阅 → Claude → 取消订阅。', color:'yellow', pinned:true, at:D(-3) },
+  { id:'n2', ttype:'email', tid:'e1', title:'Gmail 恢复方式', body:'恢复码放在 1Password 的「Gmail 恢复码」条目里。\n辅助邮箱是 QQ 邮箱，绑定手机 138 那个号。', color:'blue', pinned:true, at:D(-40) },
+  { id:'n3', ttype:'sub', tid:sid('ChatGPT'), title:'ChatGPT 发票', body:'每月 1 号左右发邮件到 outlook，报销时去设置 → 账单下载 PDF。', color:'green', pinned:false, at:D(-12) },
+  { id:'n4', ttype:'sub', tid:sid('Midjourney'), title:'续不续？', body:'最近用得少，考虑停掉，或者等有活动再按年付（年付约便宜 20%）。', color:'pink', pinned:false, at:D(-2) },
+  { id:'n5', ttype:'email', tid:'e3', title:'Apple ID 注意事项', body:'这是 Apple ID，所有 App Store 订阅都从这里扣费。\n更换付款方式：设置 → Apple ID → 付款与配送。', color:'purple', pinned:false, at:D(-60) },
+  { id:'n6', ttype:'sub', tid:sid('Cursor'), title:'Cursor 年付', body:'2025 年 3 月开始年付，明年到期前对比一下 Copilot 和 Claude Code 再决定。', color:'gray', pinned:false, at:D(-90) },
+  { id:'n7', ttype:'email', tid:'e2', title:'Outlook 用途', body:'开发者工具专用邮箱，GitHub、Vercel、Cloudflare 都用它注册。', color:'yellow', pinned:false, at:D(-30) },
+  { id:'n8', ttype:'sub', tid:sid('iCloud+'), title:'家庭共享', body:'iCloud+ 200GB 开了家庭共享，家里另外两个人也在用，别随便降级。', color:'blue', pinned:false, at:D(-15) },
+  { id:'n9', ttype:'sub', tid:sid('Spotify'), title:'为什么取消', body:'换到 YouTube Premium 了，Spotify 用到到期为止。歌单已经导出。', color:'green', pinned:false, at:D(-20) },
+];
+const nfilt = { q:'', type:'', color:'' };
+const targetOf = n => n.ttype === 'email' ? { name: mailOf(n.tid).addr, logo: mailOf(n.tid).provider, kind:'邮箱' } : (s => ({ name: `${s.name} ${s.plan}`, logo: s.name, kind:'服务' }))(subs.find(s => s.id === n.tid));
+const notesOf = (type, id) => notes.filter(n => n.ttype === type && n.tid === id);
+function noteCard(n, mini) {
+  const t = targetOf(n);
+  return `<article class="note nc-${n.color}" data-note="${n.id}" tabindex="0" role="button">
+    <div class="note-h"><b>${esc(n.title)}</b>${n.pinned ? `<span class="pin" title="已置顶">${I('pin')}</span>` : ''}</div>
+    <div class="note-b">${esc(n.body)}</div>
+    <div class="note-f">${mini ? '' : `<span class="note-t">${blogo(t.logo, 'xs')}<span class="ell">${esc(t.name)}</span></span>`}<span class="t3">${fmt(n.at).slice(5)}</span></div>
+  </article>`;
+}
+function vNotes() {
+  const list = notes.filter(n => (!nfilt.type || n.ttype === nfilt.type) && (!nfilt.color || n.color === nfilt.color) &&
+    (!nfilt.q || [n.title, n.body, targetOf(n).name].join(' ').toLowerCase().includes(nfilt.q.toLowerCase())))
+    .sort((a, b) => (b.pinned - a.pinned) || (b.at - a.at));
+  const PN = paged('notes', list, 12);
+  return `<section class="card">
+    <div class="toolbar">
+      <label class="search">${I('search')}<input id="nq" type="text" placeholder="搜索标题、内容、账号" value="${esc(nfilt.q)}"></label>
+      <select class="sel" id="nt" aria-label="账号类型"><option value="">全部账号</option><option value="email" ${nfilt.type === 'email' ? 'selected' : ''}>邮箱</option><option value="sub" ${nfilt.type === 'sub' ? 'selected' : ''}>服务</option></select>
+      <div class="swatches" role="group" aria-label="按颜色筛选"><button class="sw-c ${nfilt.color ? '' : 'on'}" data-ncolor="" title="全部颜色">全部</button>${NOTE_COLORS.map(([c, t]) => `<button class="sw-c dot nc-${c} ${nfilt.color === c ? 'on' : ''}" data-ncolor="${c}" title="${t}" aria-label="${t}"></button>`).join('')}</div>
+      <span class="sp"></span>
+      <button class="btn btn-primary" data-newnote>${I('plus')}新建卡片</button>
+    </div>
+    <div class="notes-grid">${PN.items.map(n => noteCard(n)).join('') || '<div class="empty" style="grid-column:1/-1">没有符合条件的卡片</div>'}</div>
+    ${pager('notes', PN, `共 ${list.length} 张卡片`)}
+  </section>`;
+}
+function bindNotes() {
+  const q = document.getElementById('nq');
+  q.oninput = () => { nfilt.q = q.value; if (pg.notes) pg.notes.page = 1; const pos = q.selectionStart; render(); const q2 = document.getElementById('nq'); q2.focus(); q2.setSelectionRange(pos, pos); };
+  document.getElementById('nt').onchange = e => { nfilt.type = e.target.value; if (pg.notes) pg.notes.page = 1; render(); };
+}
+function openNote(id, preset) {
+  const n = id ? notes.find(x => x.id === id) : Object.assign({ title:'', body:'', color:'yellow', pinned:false, ttype:'sub', tid:subs[0].id }, preset || {});
+  const tv = `${n.ttype}:${n.tid}`;
+  layer(`<div class="mask" data-close></div><form class="modal" id="noteForm" role="dialog" aria-label="${id ? '编辑卡片' : '新建卡片'}" style="width:min(560px,calc(100% - 32px))">
+    <div class="dr-h"><h2>${id ? '编辑卡片' : '新建卡片'}</h2><button type="button" class="icon-btn" data-close aria-label="关闭">${I('x')}</button></div>
+    <div class="md-b"><div class="fg" style="padding-top:16px">
+      <div class="f full"><label for="n-target" class="req">关联账号</label><select class="sel" id="n-target">
+        <optgroup label="邮箱">${emails.map(e => `<option value="email:${e.id}" ${tv === 'email:' + e.id ? 'selected' : ''}>${esc(e.addr)}</option>`).join('')}</optgroup>
+        <optgroup label="服务">${subs.map(s => `<option value="sub:${s.id}" ${tv === 'sub:' + s.id ? 'selected' : ''}>${esc(s.name)} ${esc(s.plan)}（${esc(mailOf(s.email).addr)}）</option>`).join('')}</optgroup></select></div>
+      <div class="f full"><label for="n-title" class="req">标题</label><input class="inp" type="text" id="n-title" required value="${esc(n.title)}" placeholder="如：怎么取消订阅"></div>
+      <div class="f full"><label for="n-body">内容</label><textarea id="n-body" rows="6" placeholder="记录取消路径、发票、共享成员、注意事项等">${esc(n.body)}</textarea><span class="hint">请不要在卡片里记录密码。</span></div>
+      <div class="f"><span class="lab">颜色</span><div class="swatches">${NOTE_COLORS.map(([c, t]) => `<label class="sw-c dot nc-${c}" title="${t}"><input type="radio" name="n-color" value="${c}" ${n.color === c ? 'checked' : ''} aria-label="${t}"></label>`).join('')}</div></div>
+      <div class="f" style="align-content:end"><label class="sw"><input type="checkbox" id="n-pin" ${n.pinned ? 'checked' : ''}>置顶显示</label></div>
+    </div></div>
+    <div class="dr-f">${id ? `<button type="button" class="btn btn-danger-t" data-delnote="${n.id}" style="margin-right:auto">删除</button>` : ''}<button type="button" class="btn" data-close>取消</button><button class="btn btn-primary">${id ? '保存' : '创建'}</button></div></form>`);
+  document.getElementById('noteForm').addEventListener('submit', ev => {
+    ev.preventDefault();
+    const [ttype, tid] = document.getElementById('n-target').value.split(':');
+    const data = { ttype, tid, title:document.getElementById('n-title').value.trim(), body:document.getElementById('n-body').value.trim(),
+      color:document.querySelector('[name=n-color]:checked').value, pinned:document.getElementById('n-pin').checked, at:new Date(TODAY) };
+    if (id) Object.assign(n, data); else notes.unshift(Object.assign({ id:'n' + Date.now() }, data));
+    closeLayer(); render(); toast(id ? '卡片已保存' : '卡片已创建');
+  });
+}
+
+/* ---------- 支付方式 ---------- */
+function vPays() {
+  const PP = paged('pays', payMethods, 10), pa = payAlerts();
+  return `${pa.map(p => `<div class="alert">${I('warn')}<div class="grow"><b>${esc(p.name)} 将于 ${ym(p.expire)} 到期</b>，绑定了 ${subsOfPay(p).length} 个订阅：${subsOfPay(p).slice(0, 6).map(s => esc(s.name)).join('、')}${subsOfPay(p).length > 6 ? ' 等' : ''}。换卡后请到这些服务里更新付款方式，避免扣费失败导致服务中断。</div><button class="btn-text" data-paysubs="${p.id}">查看订阅</button></div>`).join('')}
+  <section class="card"><div class="card-h"><h2>支付方式 <span class="t3" style="font-weight:400;font-size:14px">${payMethods.length}</span></h2><button class="btn btn-primary btn-sm" data-demo="添加支付方式">${I('plus')}添加支付方式</button></div>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>支付方式</th><th>类型</th><th>有效期</th><th>绑定订阅</th><th class="r">每月扣款</th><th>操作</th></tr></thead><tbody>
+    ${PP.items.map(p => { const bound = subsOfPay(p), m = bound.reduce((a, s) => a + monthly(s), 0), soon = p.expire && diff(p.expire) <= 60;
+      return `<tr class="row" data-paysubs="${p.id}"><td><div class="svc"><span class="pay-ic">${I('card')}</span><div><div>${esc(p.name)}</div>${p.note ? `<div class="sub">${esc(p.note)}</div>` : ''}</div></div></td><td>${tag(p.type, 'gray')}</td>
+      <td>${p.expire ? `<span class="num">${ym(p.expire)}</span> ${soon ? tag('即将到期', 'orange') : ''}` : '<span class="t3">长期有效</span>'}</td>
+      <td><div class="svc"><span class="stack">${bound.slice(0, 5).map(s => blogo(s.name)).join('')}</span><span class="t2">${bound.length} 个</span></div></td>
+      <td class="r num">${yuan0(m)}</td>
+      <td><div class="ops"><button class="btn-text" data-paysubs="${p.id}">查看订阅</button><button class="btn-text" data-demo="编辑支付方式">编辑</button></div></td></tr>`; }).join('')}
+    </tbody></table></div>${pager('pays', PP)}</section>`;
+}
+
+/* ---------- 账号安全 ---------- */
+function risks() {
+  const r = [];
+  emails.forEach(e => { if (!e.recovery) r.push({ lv:'high', t:`${e.addr} 没有设置辅助邮箱`, d:'忘记密码或被盗时可能无法找回。建议绑定一个其他服务商的邮箱作为辅助邮箱。', mail:e.id }); });
+  emails.forEach(a => { const b = emails.find(x => x.addr === a.recovery); if (b && b.recovery === a.addr && a.id < b.id) r.push({ lv:'mid', t:`${a.addr} 和 ${b.addr} 互为辅助邮箱`, d:'两个邮箱同时出问题时都无法找回。建议其中一个改用第三个邮箱或手机号找回。' }); });
+  const byPhone = {}; emails.forEach(e => { if (e.phone) (byPhone[e.phone] = byPhone[e.phone] || []).push(e); });
+  Object.entries(byPhone).forEach(([ph, es]) => { if (es.length > 1) r.push({ lv:'mid', t:`${es.length} 个邮箱绑定了同一个手机号 ${maskPhone(ph)}`, d:`${es.map(e => e.addr).join('、')}。这个号码停用或丢失后，这些邮箱都无法用短信找回。` }); });
+  payAlerts().forEach(p => r.push({ lv:'mid', t:`${p.name} 将于 ${ym(p.expire)} 到期`, d:`绑定了 ${subsOfPay(p).length} 个订阅，换卡后需要逐个更新付款方式。`, pay:p.id }));
+  emails.forEach(e => { const g = subs.filter(s => s.email === e.id && s.login === 'google' && s.status === 'active'); if (e.provider === 'Gmail' && g.length >= 3) r.push({ lv:'low', t:`${g.length} 个服务用 ${e.addr} 做 Google 一键登录`, d:`这个 Gmail 一旦丢失，${g.slice(0, 5).map(s => s.name).join('、')} 等服务都登录不了。请确保它的辅助邮箱和两步验证可用。` }); });
+  const nm = subs.filter(s => s.kind !== 'free' && s.status === 'active' && s.mfa === 'none');
+  if (nm.length) r.push({ lv:'low', t:`${nm.length} 个付费服务没有开启两步验证`, d:`${nm.slice(0, 6).map(s => s.name).join('、')}${nm.length > 6 ? ' 等' : ''}。付费账号被盗会直接产生损失，建议开启。` });
+  return r;
+}
+const LV = { high:['高风险', 'red'], mid:['中风险', 'orange'], low:['建议', 'blue'] };
+function graph() {
+  const W = 900, H = 270, ex = i => 120 + i * (W - 240) / Math.max(1, emails.length - 1), EY = 110;
+  const avg = ph => { const ix = emails.map((e, i) => e.phone === ph ? i : -1).filter(i => i >= 0); return ix.reduce((a, b) => a + b, 0) / ix.length; };
+  const phones = [...new Set(emails.map(e => e.phone).filter(Boolean))].sort((a, b) => avg(a) - avg(b)), px = i => phones.length === 1 ? W / 2 : 200 + i * (W - 400) / (phones.length - 1), PY = 236;
+  let g = `<defs><marker id="ar-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" style="fill:var(--primary)"/></marker><marker id="ar-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" style="fill:var(--red)"/></marker></defs>`;
+  emails.forEach((e, i) => { if (e.phone) g += `<line x1="${ex(i)}" y1="${EY + 24}" x2="${px(phones.indexOf(e.phone))}" y2="${PY - 16}" style="stroke:var(--text-4)" stroke-width="1.5"/>`; });
+  const done = new Set();
+  emails.forEach((a, i) => { const j = emails.findIndex(x => x.addr === a.recovery); if (j < 0 || done.has(i + ':' + j)) return;
+    const mutual = emails[j].recovery === a.addr; done.add(j + ':' + i);
+    const x1 = ex(i), x2 = ex(j), lift = 40 + Math.abs(x2 - x1) * .12;
+    g += `<path d="M${x1} ${EY - 24} Q${(x1 + x2) / 2} ${EY - 24 - lift} ${x2} ${EY - 24}" fill="none" style="stroke:var(--${mutual ? 'red' : 'primary'})" stroke-width="1.8" marker-end="url(#ar-${mutual ? 'r' : 'b'})" ${mutual ? 'marker-start="url(#ar-r)"' : ''}/>`; });
+  emails.forEach((e, i) => { const x = ex(i), warn = !e.recovery;
+    g += `<g data-tip="${esc(e.addr)}｜辅助邮箱：${esc(e.recovery || '未设置')}｜手机：${esc(maskPhone(e.phone))}"><rect x="${x - 78}" y="${EY - 24}" width="156" height="48" rx="10" style="fill:var(--panel);stroke:var(--${warn ? 'orange' : 'border'})" stroke-width="1.5" ${warn ? 'stroke-dasharray="5 4"' : ''}/>
+      <circle cx="${x - 54}" cy="${EY}" r="12" style="fill:${brand(e.provider)}"/><text x="${x - 54}" y="${EY + 4}" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">${esc(e.provider[0])}</text>
+      <text x="${x - 35}" y="${EY - 2}" font-size="13" font-weight="600" style="fill:var(--text)">${esc(e.addr.split('@')[0].slice(0, 13))}</text><text x="${x - 35}" y="${EY + 14}" font-size="11.5" style="fill:var(--text-3)">${esc(e.provider)}${warn ? ' · 无辅助' : ''}</text></g>`; });
+  phones.forEach((p, i) => { const x = px(i), n = emails.filter(e => e.phone === p).length;
+    g += `<g data-tip="${esc(maskPhone(p))}｜绑定 ${n} 个邮箱"><rect x="${x - 80}" y="${PY - 16}" width="160" height="32" rx="16" style="fill:var(--fill);stroke:var(--${n > 1 ? 'orange' : 'border'})" stroke-width="1.2"/><text x="${x}" y="${PY + 4}" text-anchor="middle" font-size="12.5" style="fill:var(--text-2)">${esc(maskPhone(p))}</text></g>`; });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="邮箱与手机号的找回关系图">${g}</svg>`;
+}
+function vSecurity() {
+  const rs = risks(), cnt = k => rs.filter(r => r.lv === k).length;
+  const PR = paged('risks', rs, 6);
+  return `<section class="card sec-sum"><span class="shield-big">${I('shield')}</span><div style="flex:1;min-width:200px"><div style="font-size:18px;font-weight:600">发现 ${rs.length} 个需要关注的问题</div><div class="t3">根据邮箱、手机号、登录方式和支付方式自动检查</div></div>
+    <div class="sum-n"><b class="num" style="color:var(--red)">${cnt('high')}</b><span>高风险</span></div><div class="sum-n"><b class="num" style="color:var(--orange)">${cnt('mid')}</b><span>中风险</span></div><div class="sum-n"><b class="num" style="color:var(--primary)">${cnt('low')}</b><span>建议</span></div></section>
+  <section class="card"><div class="card-h"><h2>找回关系图</h2><span class="ex">箭头指向辅助邮箱，悬停节点查看详情</span></div><div class="card-b graph">${graph()}
+      <div class="legend-s" style="flex-wrap:wrap;margin-top:8px"><span><i style="background:var(--primary)"></i>辅助邮箱</span><span><i style="background:var(--red)"></i>互为辅助</span><span><i style="background:var(--text-4)"></i>绑定手机</span><span><i style="background:var(--orange)"></i>需要处理</span></div></div></section>
+  <div>
+    <section class="card"><div class="card-h"><h2>检查结果</h2></div><div class="card-b">
+      ${PR.items.map(r => `<div class="risk"><span class="risk-ic" style="background:var(--${LV[r.lv][1]}-soft);color:var(--${LV[r.lv][1]})">${I(r.lv === 'low' ? 'shield' : 'warn')}</span><div style="min-width:0"><div class="nm" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-weight:500">${esc(r.t)} ${tag(LV[r.lv][0], LV[r.lv][1])}</div><div class="t2" style="font-size:13px;margin-top:2px">${esc(r.d)}</div></div>${r.mail ? `<button class="btn btn-sm" data-demo="编辑邮箱">去设置</button>` : r.pay ? `<button class="btn btn-sm" data-paysubs="${r.pay}">查看</button>` : '<span></span>'}</div>`).join('')}
+      ${PR.pages > 1 ? `<div style="display:flex;justify-content:flex-end;padding-top:12px">${pagerNav('risks', PR)}</div>` : ''}</div></section>
+
+  </div>
+  <section class="card"><div class="card-h"><h2>邮箱影响面</h2><span class="ex">某个邮箱丢失时，会影响哪些服务</span></div>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>邮箱</th><th class="r">注册的服务</th><th class="r">一键登录依赖</th><th class="r">未开两步验证</th><th>辅助邮箱</th><th>绑定手机</th></tr></thead><tbody>
+    ${emails.map(e => { const mine = subs.filter(s => s.email === e.id), sso = mine.filter(s => s.login === 'google' || s.login === 'apple').length, nm = mine.filter(s => s.mfa === 'none').length;
+      return `<tr class="row" data-mail="${e.id}"><td><div class="svc">${blogo(e.provider)}${esc(e.addr)}</div></td><td class="r num">${mine.length}</td><td class="r num">${sso}</td><td class="r num">${nm ? tag(nm + ' 个', 'orange') : '0'}</td><td>${e.recovery ? esc(e.recovery) : tag('未设置', 'red')}</td><td class="num t2">${esc(maskPhone(e.phone))}</td></tr>`; }).join('')}
+    </tbody></table></div></section>`;
+}
+
+/* ---------- 取消 / 试用决策 ---------- */
+function openCancelFlow(id) {
+  const s = subs.find(x => x.id === id);
+  layer(`<div class="mask" data-close></div><div class="modal" role="dialog" aria-label="取消订阅" style="width:min(520px,calc(100% - 32px))">
+    <div class="dr-h"><h2>${s.trialEnd ? '不再继续试用' : '取消订阅'} · ${esc(s.name)} ${esc(s.plan)}</h2><button type="button" class="icon-btn" data-close aria-label="关闭">${I('x')}</button></div>
+    <div class="md-b" style="padding-top:16px;display:grid;gap:16px">
+      <div class="trial-box" style="background:var(--orange-soft);color:var(--orange-text)">${s.trialEnd ? `请在 <b>${fmt(s.trialEnd)}</b> 之前取消，否则会开始按 ${yuan(s.price)}/${UNIT[s.cycle]} 扣费。` : `下次扣费日 <b>${fmt(s.next)}</b>，在这之前取消就不会再扣 ${yuan(s.price)}。`}</div>
+      <div><div class="sec-t">按「${esc(s.channel)}」取消的步骤</div>${guideHtml(s)}</div>
+      ${s.manage ? `<a class="btn" href="${esc(s.manage)}" target="_blank" rel="noopener" style="justify-self:start">${I('ext')}打开管理页面</a>` : ''}
+      ${notesOf('sub', s.id).length ? `<div class="hint">这个服务有 ${notesOf('sub', s.id).length} 张备注卡片，可以在详情里查看。</div>` : ''}
+    </div>
+    <div class="dr-f"><button type="button" class="btn" data-close>稍后再说</button><button class="btn btn-primary" data-cancel="${s.id}">我已取消</button></div></div>`);
+}
+
+/* ---------- 订阅管理 ---------- */
+const GROUPS = [['all','全部'],['soon','需处理'],['active','使用中'],['trial','试用中'],['ended','已取消/过期'],['once','买断'],['free','仅注册']];
+const inGroup = (s, k) => { const st = state(s); return k === 'all' || (k === 'soon' ? !!st.alert : st.group === k); };
+function vSubs() {
+  const opt = (arr, v, all) => `<option value="">${all}</option>` + arr.map(([val, t]) => `<option value="${esc(val)}" ${v === val ? 'selected' : ''}>${esc(t)}</option>`).join('');
+  return `<section class="card">
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="toolbar">
+      <label class="search">${I('search')}<input id="q" type="text" placeholder="搜索服务、档位、支付账号" value="${esc(filt.q)}"></label>
+      <select class="sel" id="fe" aria-label="登录邮箱">${opt(emails.map(e => [e.id, e.addr]), filt.email, '全部邮箱')}</select>
+      <select class="sel" id="fc" aria-label="付费渠道">${opt(CHANNELS.map(c => [c, c]), filt.channel, '全部渠道')}</select>
+      <select class="sel" id="fk" aria-label="分类">${opt(CATS.map(c => [c, c]), filt.cat, '全部分类')}</select>
+      <span class="sp"></span>
+      <button class="btn" data-import>${I('up')}导入</button><button class="btn" data-demo="导出">${I('down')}导出</button>
+    </div>
+    <div id="batch"></div>
+    <div id="tbl"></div>
+  </section>`;
+}
+function bindSubs() {
+  const q = document.getElementById('q');
+  q.oninput = () => { filt.q = q.value; if (pg.subs) pg.subs.page = 1; drawSubs(); };
+  [['fe','email'],['fc','channel'],['fk','cat']].forEach(([id, k]) => document.getElementById(id).onchange = e => { filt[k] = e.target.value; if (pg.subs) pg.subs.page = 1; drawSubs(); });
+  drawSubs();
+}
+function drawSubs() {
+  const base = subs.filter(s => (!filt.email || s.email === filt.email) && (!filt.channel || s.channel === filt.channel) && (!filt.cat || s.cat === filt.cat) &&
+    (!filt.q || [s.name, s.plan, s.pay, s.note, s.channel, mailOf(s.email).addr].join(' ').toLowerCase().includes(filt.q.toLowerCase())));
+  document.getElementById('tabs').innerHTML = GROUPS.map(([k, t]) => `<button class="tab" role="tab" data-group="${k}" aria-selected="${filt.group === k}">${t}<span class="n">${base.filter(s => inGroup(s, k)).length}</span></button>`).join('');
+  const order = { active:0, trial:1, once:2, ended:3, free:4 };
+  const rows = base.filter(s => inGroup(s, filt.group)).sort((a, b) => order[state(a).group] - order[state(b).group] || (a.next || Infinity) - (b.next || Infinity));
+  const PS = paged('subs', rows, 10), view = PS.items;
+  const allPicked = view.length && view.every(s => picked.has(s.id));
+  document.getElementById('batch').innerHTML = picked.size ? `<div class="batch">已选择 ${picked.size} 项<button class="btn-text" data-batch="renew">标记已续费</button><button class="btn-text" data-batch="cancel">标记已取消</button><button class="btn-text" data-demo="导出所选">导出所选</button><button class="btn-text danger" data-demo="删除">删除</button><button class="btn-text" data-batch="clear" style="margin-left:auto;color:var(--text-2)">取消选择</button></div>` : '';
+  document.getElementById('tbl').innerHTML = !rows.length ? '<div class="empty">没有符合条件的订阅</div>' : `
+    <div class="tbl-wrap hide-m"><table class="tbl"><thead><tr>
+      <th style="width:44px"><input type="checkbox" class="ck" data-pickall ${allPicked ? 'checked' : ''} aria-label="全选"></th>
+      <th>服务</th><th>登录邮箱</th><th>付费渠道 / 支付账号</th><th class="r">金额</th><th>周期</th><th>下次扣费</th><th>状态</th><th>操作</th></tr></thead><tbody>
+    ${view.map(s => `<tr class="row ${picked.has(s.id) ? 'sel' : ''}" data-open="${s.id}">
+      <td><input type="checkbox" class="ck" data-pick="${s.id}" ${picked.has(s.id) ? 'checked' : ''} aria-label="选择 ${esc(s.name)}"></td>
+      <td><div class="svc">${blogo(s.name)}<div><div>${esc(s.name)}</div><div class="sub">${esc(s.plan)} · ${esc(s.cat)}</div></div></div></td>
+      <td class="t2">${esc(mailOf(s.email).addr)}</td>
+      <td>${s.channel ? `<div>${esc(s.channel)}</div><div class="sub">${esc(s.pay)}</div>` : '<span class="t3">—</span>'}</td>
+      <td class="r">${priceCell(s)}</td>
+      <td class="t2">${cycleCell(s)}</td>
+      <td class="num">${s.kind === 'sub' ? fmt(s.next) : '—'}</td>
+      <td>${stag(s)}</td>
+      <td><div class="ops"><button class="btn-text" data-edit="${s.id}">编辑</button>${isLive(s) && !s.trialEnd ? `<button class="btn-text" data-renew="${s.id}">续费</button>` : ''}</div></td>
+    </tr>`).join('')}</tbody></table></div>
+    <div class="mlist">${view.map(s => `<div class="mcard" data-open="${s.id}"><div class="top">${blogo(s.name)}<div class="grow"><div class="ell">${esc(s.name)} <span class="t3">${esc(s.plan)}</span></div></div>${stag(s)}</div>
+      <div class="meta"><span class="ell">${esc(mailOf(s.email).addr)}</span><span class="num" style="color:var(--text);flex:none">${s.kind === 'free' ? '免费' : yuan(s.price) + (s.kind === 'sub' ? '/' + UNIT[s.cycle] : '')}</span></div>
+      <div class="meta"><span class="ell">${esc(s.channel) || '仅注册'}</span><span class="num" style="flex:none">${s.kind === 'sub' ? fmt(s.next) : ''}</span></div></div>`).join('')}</div>
+    ${pager('subs', PS)}`;
+}
+
+/* ---------- 邮箱账号 ---------- */
+function vMails() {
+  const PM = paged('mails', emails, 10);
+  return `<section class="card"><div class="card-h"><h2>邮箱账号 <span class="t3" style="font-weight:400;font-size:14px">${emails.length}</span></h2><button class="btn btn-primary btn-sm" data-addmail>${I('plus')}添加邮箱</button></div>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>邮箱</th><th>类型</th><th>绑定手机</th><th>辅助邮箱</th><th class="r">服务数</th><th class="r">每月支出</th><th>备注</th><th>卡片</th><th>操作</th></tr></thead><tbody>
+    ${PM.items.map(e => { const mine = subs.filter(s => s.email === e.id); const al = mine.filter(s => state(s).alert).length;
+      return `<tr class="row" data-mail="${e.id}"><td><div class="svc">${blogo(e.provider)}${esc(e.addr)}</div></td><td>${tag(e.provider, 'blue')}</td>
+      <td><span style="display:inline-flex;gap:6px;align-items:center"><span class="num">${esc(shown.has(e.id) ? e.phone : maskPhone(e.phone)) || '—'}</span><button class="icon-btn" style="width:24px;height:24px" data-reveal="${e.id}" aria-label="显示或隐藏手机号">${I('eye')}</button></span></td>
+      <td class="t2">${esc(e.recovery) || '—'}</td><td class="r num">${al ? tag(al + ' 项待处理', 'orange') + ' ' : ''}${mine.length}</td><td class="r num">${yuan0(mine.reduce((a, s) => a + monthly(s), 0))}</td><td class="t2">${esc(e.note)}</td><td>${notesOf('email', e.id).length ? `<button class="btn-text" data-mnotes="${e.id}">${I('note')}<span>${notesOf('email', e.id).length} 张</span></button>` : '<span class="t3">—</span>'}</td>
+      <td><div class="ops"><button class="btn-text" data-mail="${e.id}">查看服务</button><button class="btn-text" data-newnote="email:${e.id}">加卡片</button><button class="btn-text" data-demo="编辑邮箱">编辑</button></div></td></tr>`; }).join('')}
+    </tbody></table></div>${pager('mails', PM)}</section>`;
+}
+
+/* ---------- 扣费日历 ---------- */
+function eventsIn(y, m) {
+  const start = new Date(y, m, 1), end = new Date(y, m + 1, 0), map = {};
+  const add = (d, ev) => { (map[d.getDate()] = map[d.getDate()] || []).push(ev); };
+  subs.forEach(s => {
+    s.history.forEach(h => { if (h.date >= start && h.date <= end) add(h.date, { s, type:'paid', amount:h.amount }); });
+    if (isLive(s) && s.next) {
+      let d = new Date(s.next), g = 0;
+      while (d <= end && g++ < 60) {
+        if (d >= start && d >= TODAY) add(d, { s, type: s.trialEnd && sameDay(d, s.trialEnd) ? 'trial' : 'due', amount:s.price });
+        if (!s.auto && !s.trialEnd) break;
+        d = addCycle(d, s.cycle, 1);
+      }
+    }
+  });
+  return map;
+}
+function vCal() {
+  const y = calMonth.getFullYear(), m = calMonth.getMonth();
+  const off = (new Date(y, m, 1).getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
+  const ev = eventsIn(y, m), all = Object.values(ev).flat();
+  const paid = all.filter(e => e.type === 'paid').reduce((a, e) => a + e.amount, 0), due = all.filter(e => e.type !== 'paid').reduce((a, e) => a + e.amount, 0);
+  let cells = ['周一','周二','周三','周四','周五','周六','周日'].map(w => `<div class="wd">${w}</div>`).join('');
+  for (let i = 0; i < off; i++) cells += '<div class="day out"></div>';
+  for (let d = 1; d <= days; d++) {
+    const dt = new Date(y, m, d), es = ev[d] || [];
+    cells += `<div class="day ${sameDay(dt, TODAY) ? 'today' : ''}"><span class="n num">${d}</span>${es.slice(0, 3).map(e => `<button class="chip ${e.type === 'due' ? '' : e.type}" data-open="${e.s.id}" title="${esc(e.s.name)} ${yuan(e.amount)}">${blogo(e.s.name, 'xs')}<span>${esc(e.s.name)} ¥${e.amount}</span></button>`).join('')}${es.length > 3 ? `<span class="more">还有 ${es.length - 3} 笔</span>` : ''}</div>`;
+  }
+  const tail = (7 - (off + days) % 7) % 7;
+  for (let i = 0; i < tail; i++) cells += '<div class="day out"></div>';
+  return `<section class="card"><div class="card-h"><div style="display:flex;align-items:center;gap:6px"><button class="icon-btn" data-cal="-1" aria-label="上个月">${I('left')}</button><h2 class="num">${y} 年 ${m + 1} 月</h2><button class="icon-btn" data-cal="1" aria-label="下个月">${I('right')}</button><button class="btn btn-sm" data-cal="0">今天</button></div>
+    <span class="ex hide-m" style="display:flex;gap:12px"><span>已扣 <b class="num" style="color:var(--text)">${yuan(paid)}</b></span><span>待扣 <b class="num" style="color:var(--primary)">${yuan(due)}</b></span></span></div>
+    <div class="card-b"><div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">${tag('待扣费', 'blue')}${tag('已扣费', 'gray')}${tag('试用转正', 'purple')}</div><div class="cal">${cells}</div></div></section>`;
+}
+
+/* ---------- 付费记录 ---------- */
+function vBills() {
+  const rows = subs.flatMap(s => s.history.filter(h => h.date.getFullYear() === billYear && h.date <= TODAY).map(h => ({ s, h }))).sort((a, b) => b.h.date - a.h.date);
+  const total = rows.reduce((a, r) => a + r.h.amount, 0);
+  const years = [...new Set(subs.flatMap(s => s.history.map(h => h.date.getFullYear())))].sort((a, b) => b - a);
+  const PB = paged('bills', rows, 10);
+  const t = {}; rows.forEach(r => t[r.s.name] = (t[r.s.name] || 0) + r.h.amount);
+  const top = Object.entries(t).sort((a, b) => b[1] - a[1])[0];
+  return `<section class="card"><div class="card-h"><h2>付费记录</h2><div style="display:flex;gap:8px;align-items:center"><select class="sel" id="by" aria-label="年份">${years.map(y => `<option ${y === billYear ? 'selected' : ''}>${y}</option>`).join('')}</select><button class="btn btn-sm" data-demo="导出">${I('down')}导出</button></div></div>
+    <div class="stats" style="border-bottom:1px solid var(--divider)"><div class="stat"><div class="l">${billYear} 年合计</div><div class="v">${yuan0(total)}</div></div><div class="stat"><div class="l">笔数</div><div class="v">${rows.length}<small>笔</small></div></div><div class="stat"><div class="l">月均</div><div class="v">${yuan0(total / (billYear === TODAY.getFullYear() ? TODAY.getMonth() + 1 : 12))}</div></div><div class="stat"><div class="l">花费最多</div><div class="v ell">${top ? `${esc(top[0])}<small>${yuan0(top[1])}</small>` : '—'}</div></div></div>
+    <div class="tbl-wrap"><table class="tbl compact"><thead><tr><th>日期</th><th>服务</th><th>登录邮箱</th><th>付费渠道</th><th>支付账号</th><th class="r">金额</th></tr></thead><tbody>
+    ${PB.items.map(({ s, h }) => `<tr class="row" data-open="${s.id}"><td class="num">${fmt(h.date)}</td><td><div class="svc">${blogo(s.name)}${esc(s.name)} <span class="t3">${esc(s.plan)}</span></div></td><td class="t2">${esc(mailOf(s.email).addr)}</td><td class="t2">${esc(s.channel)}</td><td class="t2">${esc(s.pay)}</td><td class="r num">${yuan(h.amount)}</td></tr>`).join('') || '<tr><td colspan="6" class="empty">这一年没有付费记录</td></tr>'}
+    </tbody></table></div>${pager('bills', PB, `共 ${rows.length} 条 · 合计 <b class="num" style="color:var(--text)">${yuan(total)}</b>`)}</section>`;
+}
+
+/* ---------- 系统设置 ---------- */
+function vSettings() {
+  return `<section class="card"><div class="card-h"><h2>提醒</h2></div>
+    <div class="set"><div><h3>提前提醒天数</h3><p>到期前多少天在工作台和顶栏铃铛中提醒</p></div><div class="ctl"><input class="inp num" id="st-days" type="number" min="1" max="60" value="${settings.remindDays}" style="width:96px"> 天</div></div>
+    <div class="set"><div><h3>日历订阅</h3><p>把扣费日、试用结束日同步到手机日历（iPhone、Google 日历、飞书日历都支持），由手机按时提醒</p></div><div class="ctl" style="display:grid;gap:6px"><div class="copy-row"><input class="inp" id="st-ics" readonly value="https://acct.example.com/calendar/7f3a9c1e.ics" aria-label="日历订阅链接"><button class="btn" data-copy="st-ics">复制链接</button></div><span class="hint">iPhone：设置 → 日历 → 账户 → 添加账户 → 其他 → 添加已订阅的日历，粘贴链接即可</span></div></div>
+    <div class="set"><div><h3>飞书机器人推送</h3><p>每天定时把待办推送到飞书群或个人会话</p></div><div class="ctl" style="display:grid;gap:12px;justify-items:start">
+      <label class="sw"><input type="checkbox" checked id="st-fs">开启推送</label>
+      <div class="copy-row"><input class="inp" id="st-hook" value="https://open.feishu.cn/open-apis/bot/v2/hook/••••••••" aria-label="飞书机器人 Webhook 地址"><button class="btn" data-demo="已向飞书发送测试消息">发送测试</button></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="t2">推送时间</span><select class="sel" id="st-time" aria-label="推送时间"><option>每天 09:00</option><option>每天 20:00</option><option>仅工作日 09:00</option></select></div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap"><label class="sw"><input type="checkbox" checked>到期提醒</label><label class="sw"><input type="checkbox" checked>试用结束</label><label class="sw"><input type="checkbox" checked>支付方式过期</label><label class="sw"><input type="checkbox">每周安全检查</label></div>
+      <div class="fs-msg"><div class="fs-h"><span class="logo-mark" style="width:20px;height:20px;border-radius:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" style="width:12px;height:12px"><path d="M5 7h14M5 12h14M5 17h8"/></svg></span>账号簿 · 今日待办</div><div>· Claude Pro 3 天后扣费 ¥148.00</div><div>· Perplexity Pro 试用 6 天后结束</div><div>· Visa 尾号 8821 即将过期，绑定 ${subsOfPay(payMethods[1]).length} 个订阅</div><div class="fs-btn">打开账号簿</div></div>
+    </div></div>
+  </section>
+  <section class="card"><div class="card-h"><h2>数据</h2></div>
+    <div class="set"><div><h3>批量导入</h3><p>下载 Excel 模板，填写后上传</p></div><div class="ctl"><button class="btn" data-import>${I('up')}导入数据</button><button class="btn-text" data-demo="下载模板">下载模板</button></div></div>
+    <div class="set"><div><h3>导出</h3><p>Excel / CSV 用于查看，JSON 为完整备份</p></div><div class="ctl"><button class="btn" data-demo="导出 Excel">Excel</button><button class="btn" data-demo="导出 CSV">CSV</button><button class="btn" data-demo="导出 JSON">JSON 备份</button></div></div>
+    <div class="set"><div><h3>从备份恢复</h3><p>用 JSON 备份覆盖当前数据，操作前会自动再备份一次</p></div><div class="ctl"><button class="btn" data-demo="恢复">选择备份文件</button></div></div>
+  </section>
+  <section class="card"><div class="card-h"><h2>安全</h2></div>
+    <div class="set"><div><h3>登录密码</h3><p>上次修改于 2026-09-02</p></div><div class="ctl"><button class="btn" data-demo="修改密码">修改密码</button></div></div>
+    <div class="set"><div><h3>两步验证</h3><p>使用 Google Authenticator 等验证器 App</p></div><div class="ctl">${tag('已开启', 'green')}<button class="btn-text" data-demo="重新绑定">重新绑定</button></div></div>
+    <div class="set"><div><h3>登录设备</h3><p>当前有 2 台设备保持登录</p></div><div class="ctl"><button class="btn" data-demo="退出其他设备">退出其他设备</button></div></div>
+  </section>`;
+}
+
+/* ---------- 抽屉 / 弹窗 ---------- */
+function openDetail(id) {
+  const s = subs.find(x => x.id === id), e = mailOf(s.email);
+  const kv = (k, v, full) => `<div class="${full ? 'full' : ''}"><dt>${k}</dt><dd>${v}</dd></div>`;
+  const link = u => u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\//, '').replace(/\/$/, ''))}</a>` : '—';
+  const hist = [...s.history].sort((a, b) => b.date - a.date);
+  curDetail = id; const PH = paged('dhist', hist, 6);
+  layer(`<div class="mask" data-close></div><aside class="drawer" role="dialog" aria-label="订阅详情">
+    <div class="dr-h"><h2>订阅详情</h2><button class="icon-btn" data-close aria-label="关闭">${I('x')}</button></div>
+    <div class="dr-b">
+      <div class="d-top">${blogo(s.name, 'lg')}<div><h3>${esc(s.name)} ${stag(s)}</h3><div class="t3">${esc(s.plan)} · ${esc(s.cat)}</div></div></div>
+      ${s.trialEnd ? `<div class="trial-box">免费试用中，${fmt(s.trialEnd)}（${diff(s.trialEnd)} 天后）开始按 ${yuan(s.price)}/${UNIT[s.cycle]} 扣费。不需要的话请在此之前取消。<div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-sm" data-cancelflow="${s.id}">不要了，去取消</button><button class="btn btn-sm btn-primary" data-convert="${s.id}">保留，转为正式</button></div></div>` : ''}
+      <div><div class="sec-t">计费信息</div><dl class="desc">
+        ${kv('金额', s.kind === 'free' ? '免费' : `<b class="num">${yuan(s.price)}</b> ${s.kind === 'sub' ? '/ ' + UNIT[s.cycle] : '一次性'}`)}
+        ${kv('计费方式', s.kind === 'free' ? '仅注册' : s.kind === 'once' ? '一次性买断' : CYCLE[s.cycle])}
+        ${s.kind === 'sub' ? kv(s.trialEnd ? '首次扣费' : s.status === 'cancelled' ? '有效期至' : '下次扣费', `<span class="num">${fmt(s.next)}</span> ${WEEK[s.next.getDay()]}`) + kv('自动续费', s.auto ? '是' : '否') : ''}
+        ${s.kind !== 'free' ? kv('付费渠道', esc(s.channel)) + kv('支付账号', esc(s.pay)) : ''}
+      </dl></div>
+      <div><div class="sec-t">账号信息</div><dl class="desc">
+        ${kv('登录邮箱', esc(e.addr))}${kv('绑定手机', `<span class="num">${esc(maskPhone(e.phone))}</span>`)}${kv('辅助邮箱', esc(e.recovery) || '—')}${kv('登录方式', esc(LOGINS[s.login] || '—'))}${kv('两步验证', s.mfa === 'none' ? tag('未开启', 'orange') : esc(MFAS[s.mfa] || '—'))}${kv('服务网址', link(s.url))}${kv('管理订阅', link(s.manage), true)}${s.note ? kv('备注', esc(s.note), true) : ''}
+      </dl></div>
+      ${s.kind === 'sub' && s.status === 'active' ? `<div><div class="sec-t">如何取消 <span class="t3" style="font-weight:400">按「${esc(s.channel)}」自动生成</span></div>${guideHtml(s)}</div>` : ''}
+      <div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="sec-t" style="margin:0">备注卡片 <span class="t3" style="font-weight:400">${notesOf('sub', s.id).length}</span></div><button class="btn-text" data-newnote="sub:${s.id}" style="font-size:13px;font-weight:400">+ 添加卡片</button></div>
+        ${notesOf('sub', s.id).length ? `<div class="notes-mini">${notesOf('sub', s.id).map(n => noteCard(n, true)).join('')}</div>` : '<div class="t3" style="font-size:13px">还没有卡片，可以记下取消方法、发票、共享成员等</div>'}</div>
+      ${s.kind === 'free' ? '' : `<div><div class="sec-t">付费记录 <span class="t3" style="font-weight:400">累计 ${yuan(spent(s))} · ${hist.length} 笔</span></div>
+        <div style="border:1px solid var(--divider);border-radius:6px;overflow:hidden"><table class="tbl compact"><thead><tr><th>日期</th><th class="r">金额</th></tr></thead><tbody>${PH.items.map(h => `<tr><td class="num">${fmt(h.date)}</td><td class="r num">${yuan(h.amount)}</td></tr>`).join('') || '<tr><td colspan="2" class="t3">暂无</td></tr>'}</tbody></table></div>${PH.pages > 1 ? `<div style="display:flex;justify-content:flex-end;margin-top:10px">${pagerNav('dhist', PH)}</div>` : ''}</div>`}
+    </div>
+    <div class="dr-f">
+      ${isLive(s) ? `<button class="btn" data-cancelflow="${s.id}">取消订阅</button>` : ''}
+      <button class="btn" data-edit="${s.id}">编辑</button>
+      ${s.trialEnd ? `<button class="btn btn-primary" data-convert="${s.id}">转为正式订阅</button>` : isLive(s) ? `<button class="btn btn-primary" data-renew="${s.id}">标记已续费</button>` : ''}
+    </div></aside>`);
+}
+
+let editing = null;
+function openForm(id) {
+  editing = id || null;
+  const s = id ? subs.find(x => x.id === id) : { name:'', plan:'', email:'e1', cat:'AI', kind:'sub', price:'', cycle:'month', next:D(30), trialEnd:null, auto:true, channel:'Apple App Store', pay:'', status:'active', url:'', manage:'', note:'', login:'password', mfa:'none' };
+  const radios = (name, opts, val) => `<div class="radios">${opts.map(([v, t]) => `<input type="radio" name="${name}" id="${name}-${v}" value="${v}" ${val === v ? 'checked' : ''}><label for="${name}-${v}">${t}</label>`).join('')}</div>`;
+  layer(`<div class="mask" data-close></div><form class="modal" id="subForm" role="dialog" aria-label="${id ? '编辑订阅' : '新建订阅'}">
+    <div class="dr-h"><h2>${id ? '编辑订阅' : '新建订阅'}</h2><button type="button" class="icon-btn" data-close aria-label="关闭">${I('x')}</button></div>
+    <div class="md-b">
+      <div class="form-sec">基本信息</div><div class="fg">
+        <div class="f" style="position:relative"><label for="f-name" class="req">服务名称</label><input class="inp" type="text" id="f-name" required value="${esc(s.name)}" placeholder="输入名称，可从模板快速填写" autocomplete="off"><div class="sug" id="f-sug" hidden></div></div>
+        <div class="f"><label for="f-plan">订阅档位</label><input class="inp" type="text" id="f-plan" value="${esc(s.plan)}" placeholder="如 Pro / Plus / Max" list="plans"><datalist id="plans"><option>Pro</option><option>Plus</option><option>Max</option><option>Team</option><option>Free</option></datalist></div>
+        <div class="f"><label for="f-email" class="req">登录邮箱</label><select class="sel" id="f-email">${emails.map(e => `<option value="${e.id}" ${s.email === e.id ? 'selected' : ''}>${esc(e.addr)}</option>`).join('')}</select></div>
+        <div class="f"><label for="f-cat">分类</label><select class="sel" id="f-cat">${CATS.map(c => `<option ${s.cat === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+        <div class="f"><label for="f-url">服务网址</label><input class="inp" type="url" id="f-url" value="${esc(s.url)}" placeholder="https://"></div>
+        <div class="f"><label for="f-manage">管理订阅链接</label><input class="inp" type="url" id="f-manage" value="${esc(s.manage)}" placeholder="取消或更改套餐的页面"></div>
+      </div>
+      <div class="form-sec">登录与安全</div><div class="fg">
+        <div class="f"><label for="f-login">登录方式</label><select class="sel" id="f-login">${Object.entries(LOGINS).map(([k, t]) => `<option value="${k}" ${s.login === k ? 'selected' : ''}>${t}</option>`).join('')}</select><span class="hint">用 Google / Apple 登录的服务会计入「邮箱影响面」</span></div>
+        <div class="f"><label for="f-mfa">两步验证</label><select class="sel" id="f-mfa">${Object.entries(MFAS).map(([k, t]) => `<option value="${k}" ${s.mfa === k ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+      </div>
+      <div class="form-sec">计费信息</div><div class="fg">
+        <div class="f full"><span class="lab">计费方式</span>${radios('f-kind', [['sub','订阅'],['once','一次性买断'],['free','免费 / 仅注册']], s.kind)}</div>
+        <div class="f pay"><label for="f-price" class="req">金额</label><div class="affix"><span>¥</span><input class="inp num" type="number" id="f-price" step="0.01" min="0" value="${s.price}" placeholder="0.00" style="width:100%"></div></div>
+        <div class="f sub"><span class="lab">计费周期</span>${radios('f-cycle', [['week','周'],['month','月'],['quarter','季'],['year','年']], s.cycle)}</div>
+        <div class="f pay"><label for="f-next" id="f-next-lab" class="req">下次扣费日期</label><input class="inp" type="date" id="f-next" value="${fmt(s.trialEnd || s.next || (s.history && s.history[0] ? s.history[0].date : TODAY))}"></div>
+        <div class="f sub"><label for="f-status">状态</label><select class="sel" id="f-status"><option value="active" ${s.status === 'active' ? 'selected' : ''}>使用中</option><option value="cancelled" ${s.status === 'cancelled' ? 'selected' : ''}>已取消</option><option value="expired" ${s.status === 'expired' ? 'selected' : ''}>已过期</option></select></div>
+        <div class="f sub"><label class="sw"><input type="checkbox" id="f-trial" ${s.trialEnd ? 'checked' : ''}>免费试用中</label><span class="hint">开启后，上方日期填写试用结束日</span></div>
+        <div class="f sub"><label class="sw"><input type="checkbox" id="f-auto" ${s.auto ? 'checked' : ''}>自动续费</label><span class="hint">到期后自动顺延一个周期并记录付费</span></div>
+      </div>
+      <div class="pay"><div class="form-sec">支付信息</div><div class="fg">
+        <div class="f"><label for="f-channel">付费渠道</label><select class="sel" id="f-channel">${CHANNELS.map(c => `<option ${s.channel === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+        <div class="f"><label for="f-pay">支付账号</label><input class="inp" type="text" id="f-pay" value="${esc(s.pay)}" placeholder="如 招行信用卡 尾号 1234" list="pays"><datalist id="pays">${[...new Set(subs.map(x => x.pay).filter(Boolean))].map(p => `<option>${esc(p)}</option>`).join('')}</datalist></div>
+      </div></div>
+      <div class="form-sec">备注</div><div class="f"><textarea id="f-note" aria-label="备注" placeholder="选填">${esc(s.note)}</textarea></div>
+    </div>
+    <div class="dr-f"><button type="button" class="btn" data-close>取消</button><button class="btn btn-primary">${id ? '保存' : '创建'}</button></div>
+  </form>`);
+  const form = document.getElementById('subForm');
+  const vis = () => {
+    const kind = form.querySelector('[name=f-kind]:checked').value, trial = document.getElementById('f-trial').checked;
+    form.querySelectorAll('.pay').forEach(el => el.hidden = kind === 'free');
+    form.querySelectorAll('.sub').forEach(el => el.hidden = kind !== 'sub');
+    document.getElementById('f-next-lab').textContent = kind === 'once' ? '购买日期' : trial ? '试用结束日期' : '下次扣费日期';
+  };
+  form.addEventListener('change', vis); vis();
+  const nameIn = document.getElementById('f-name'), sug = document.getElementById('f-sug');
+  const showSug = () => {
+    if (id) return;
+    const q = nameIn.value.trim().toLowerCase();
+    const list = TEMPLATES.map((t, i) => [t, i]).filter(([t]) => !q || t.name.toLowerCase().includes(q)).slice(0, 6);
+    sug.innerHTML = list.length ? `<div class="sug-h">${q ? '匹配的服务模板' : '常用服务 · 选择后自动填写'}</div>` + list.map(([t, i]) => `<button type="button" class="sug-i" data-tpl="${i}">${blogo(t.name)}<span class="grow">${esc(t.name)} <span class="t3">${esc(t.plan)}</span></span><span class="num t2">${yuan0(t.price)}/${UNIT[t.cycle]}</span></button>`).join('') : '';
+    sug.hidden = !list.length;
+  };
+  nameIn.addEventListener('focus', showSug); nameIn.addEventListener('input', showSug);
+  nameIn.addEventListener('blur', () => setTimeout(() => { sug.hidden = true; }, 120));
+  sug.addEventListener('mousedown', ev => {
+    const b = ev.target.closest('[data-tpl]'); if (!b) return;
+    ev.preventDefault();
+    const t = TEMPLATES[+b.dataset.tpl], set = (k, v) => { document.getElementById(k).value = v; };
+    nameIn.value = t.name; set('f-plan', t.plan); set('f-url', t.url); set('f-manage', t.manage); set('f-price', t.price);
+    const cat = document.getElementById('f-cat'); if ([...cat.options].some(o => o.value === t.cat)) cat.value = t.cat;
+    const cy = document.getElementById('f-cycle-' + t.cycle); if (cy) cy.checked = true;
+    sug.hidden = true; toast(`已套用「${t.name}」模板，可继续修改`);
+  });
+  form.addEventListener('submit', ev => {
+    ev.preventDefault();
+    const g = id => document.getElementById(id).value.trim();
+    const kind = form.querySelector('[name=f-kind]:checked').value, date = new Date(g('f-next') + 'T00:00:00');
+    const trial = kind === 'sub' && document.getElementById('f-trial').checked;
+    const data = { name:g('f-name'), plan:g('f-plan'), email:g('f-email'), cat:g('f-cat'), url:g('f-url'), manage:g('f-manage'), kind,
+      price:kind === 'free' ? 0 : Number(g('f-price')) || 0, cycle:form.querySelector('[name=f-cycle]:checked').value,
+      next:kind === 'sub' ? date : null, trialEnd:trial ? date : null, auto:document.getElementById('f-auto').checked,
+      status:kind === 'sub' ? g('f-status') : 'active', channel:kind === 'free' ? '' : g('f-channel'), pay:kind === 'free' ? '' : g('f-pay'), note:g('f-note'), login:g('f-login'), mfa:g('f-mfa') };
+    if (editing) Object.assign(subs.find(x => x.id === editing), data);
+    else subs.push(Object.assign({ id:'s' + (++seq), history: kind === 'once' ? [{ date, amount:data.price }] : [] }, data));
+    closeLayer(); render(); toast(editing ? '保存成功' : '创建成功');
+  });
+}
+
+function openMailForm() {
+  layer(`<div class="mask" data-close></div><form class="modal" id="mailForm" role="dialog" aria-label="添加邮箱" style="width:min(520px,calc(100% - 32px))">
+    <div class="dr-h"><h2>添加邮箱</h2><button type="button" class="icon-btn" data-close aria-label="关闭">${I('x')}</button></div>
+    <div class="md-b"><div class="fg" style="padding-top:16px">
+      <div class="f full"><label for="m-addr" class="req">邮箱地址</label><input class="inp" type="text" id="m-addr" required placeholder="name@gmail.com"></div>
+      <div class="f"><label for="m-phone">绑定手机</label><input class="inp" type="text" id="m-phone" placeholder="+86 138 0000 0000"></div>
+      <div class="f"><label for="m-rec">辅助邮箱</label><input class="inp" type="text" id="m-rec" placeholder="选填"></div>
+      <div class="f full"><label for="m-note">备注</label><input class="inp" type="text" id="m-note" placeholder="如：主力号 / 注册小号"></div>
+      <div class="f full hint">系统不保存邮箱密码。手机号默认打码显示。</div>
+    </div></div>
+    <div class="dr-f"><button type="button" class="btn" data-close>取消</button><button class="btn btn-primary">确定</button></div></form>`);
+  document.getElementById('mailForm').addEventListener('submit', ev => {
+    ev.preventDefault();
+    const g = id => document.getElementById(id).value.trim(), addr = g('m-addr');
+    const dom = (addr.split('@')[1] || '').split('.')[0].toLowerCase();
+    emails.push({ id:'e' + Date.now(), addr, provider:{ gmail:'Gmail', outlook:'Outlook', hotmail:'Outlook', icloud:'iCloud', qq:'QQ 邮箱', '163':'网易邮箱' }[dom] || '其他', phone:g('m-phone'), recovery:g('m-rec'), note:g('m-note') });
+    closeLayer(); render(); toast('添加成功');
+  });
+}
+
+function openImport() {
+  layer(`<div class="mask" data-close></div><div class="modal" role="dialog" aria-label="导入数据">
+    <div class="dr-h"><h2>导入数据</h2><button type="button" class="icon-btn" data-close aria-label="关闭">${I('x')}</button></div>
+    <div class="md-b">
+      <div class="steps"><div class="stp done"><span class="k">1</span><span>上传文件</span></div><div class="stp-line"></div><div class="stp on"><span class="k">2</span><span>预览校验</span></div><div class="stp-line"></div><div class="stp"><span class="k">3</span><span>完成导入</span></div></div>
+      <div class="upload">${I('up')}<div>点击或拖拽文件到此处上传</div><div class="hint">支持 .xlsx / .csv，单次最多 1000 行。<a href="#" data-demo="下载模板">下载导入模板</a></div></div>
+      <div class="file">${I('file')}<span style="flex:1">账号簿导入.xlsx</span><span class="t3">42 行</span></div>
+      <div style="margin:16px 0 8px;display:flex;gap:8px;font-size:13px;align-items:center"><span>校验结果：</span>${tag('41 行通过', 'green')}${tag('1 行有误', 'red')}</div>
+      <div class="tbl-wrap" style="border:1px solid var(--divider);border-radius:6px"><table class="tbl compact"><thead><tr><th>行</th><th>服务</th><th>档位</th><th>登录邮箱</th><th class="r">金额</th><th>周期</th><th>下次扣费</th><th>校验</th></tr></thead><tbody>
+        <tr><td>2</td><td>Claude</td><td>Pro</td><td>alex.work@gmail.com</td><td class="r">148.00</td><td>月</td><td>2026-11-05</td><td>${tag('通过', 'green')}</td></tr>
+        <tr><td>3</td><td>Netflix</td><td>标准</td><td>alex.work@gmail.com</td><td class="r">68.00</td><td>月</td><td>2026-11-12</td><td>${tag('通过', 'green')}</td></tr>
+        <tr><td>4</td><td>Canva</td><td>Pro</td><td>new@gmail.com</td><td class="r">89.00</td><td>月</td><td style="color:var(--red)">2026-11-31</td><td>${tag('日期无效', 'red')}</td></tr>
+      </tbody></table></div>
+      <p class="hint" style="margin:8px 0 0">表中没有的邮箱会自动新建。有误的行不会导入，可修改后重新上传。</p>
+    </div>
+    <div class="dr-f"><button type="button" class="btn" data-close>取消</button><button class="btn btn-primary" data-demo="导入">导入 41 行</button></div></div>`);
+}
+
+function openBell() {
+  const al = alerts();
+  layer(`<div class="mask" data-close style="background:transparent"></div><div class="pop" role="dialog" aria-label="到期提醒"><div class="pop-h"><span>到期提醒</span><span class="t3" style="font-weight:400;font-size:12px">${settings.remindDays} 天内</span></div><div class="pop-b">
+    ${al.map(s => `<div class="li" data-open="${s.id}">${blogo(s.name)}<div class="grow"><div class="nm">${esc(s.name)} ${esc(s.plan)}</div><div class="t3" style="font-size:12px">${fmt(s.next)} · ${yuan(s.price)}</div></div>${stag(s)}</div>`).join('') || '<div class="empty">暂无提醒</div>'}</div></div>`);
+}
+
+function renew(id) {
+  const s = subs.find(x => x.id === id);
+  s.history.push({ date:new Date(TODAY), amount:s.price });
+  s.next = addCycle(s.next < TODAY ? TODAY : s.next, s.cycle, 1);
+  return s;
+}
+
+function repaint(k) { if (k === 'subs') drawSubs(); else if (k === 'dhist') openDetail(curDetail); else render(); }
+function layer(html) { document.getElementById('layer').innerHTML = html; const f = document.querySelector('#layer .icon-btn'); f && f.focus({ preventScroll:true }); }
+function closeLayer() { document.getElementById('layer').innerHTML = ''; }
+let tt;
+function toast(t) { const el = document.getElementById('toast'); el.innerHTML = I('ok') + esc(t); el.hidden = false; clearTimeout(tt); tt = setTimeout(() => el.hidden = true, 2400); }
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-pick],[data-pickall],[data-nav],[data-open],[data-renew],[data-add],[data-edit],[data-close],[data-group],[data-mail],[data-addmail],[data-demo],[data-logout],[data-cancel],[data-convert],[data-cal],[data-reveal],[data-import],[data-bell],[data-burger],[data-batch],[data-skins],[data-skin],[data-htab],[data-pg],[data-note],[data-newnote],[data-ncolor],[data-delnote],[data-mnotes],[data-cancelflow],[data-paysubs],[data-unsnooze],[data-copy]');
+  if (e.target.closest('a[target=_blank]')) return;
+  if (!t) { if (!e.target.closest('.side,.burger')) document.getElementById('side').classList.remove('open'); return; }
+  const d = t.dataset;
+  if (t.tagName === 'A' && t.getAttribute('href') === '#') e.preventDefault();
+  if (d.pick) { picked.has(d.pick) ? picked.delete(d.pick) : picked.add(d.pick); drawSubs(); return; }
+  if (d.pickall !== undefined) { const on = t.checked; document.querySelectorAll('[data-pick]').forEach(x => on ? picked.add(x.dataset.pick) : picked.delete(x.dataset.pick)); drawSubs(); return; }
+  if (d.reveal) { shown.has(d.reveal) ? shown.delete(d.reveal) : shown.add(d.reveal); render(); return; }
+  if (d.pg) { if (t.disabled) return; pg[d.pg].page = +d.p; repaint(d.pg); return; }
+  if (d.cancelflow) { openCancelFlow(d.cancelflow); return; }
+  if (d.paysubs) { const pm = payMethods.find(x => x.id === d.paysubs); filt.q = pm.name; filt.group = 'all'; filt.email = ''; if (pg.subs) pg.subs.page = 1; page = 'subs'; closeLayer(); render(); scrollTo(0, 0); return; }
+  if (d.unsnooze !== undefined) { Object.keys(snoozed).forEach(k => delete snoozed[k]); render(); toast('已恢复全部提醒'); return; }
+  if (d.copy) { const inp = document.getElementById(d.copy); try { navigator.clipboard.writeText(inp.value).then(() => toast('链接已复制'), () => { inp.select(); toast('已选中，按 Ctrl+C 复制'); }); } catch (err) { inp.select(); toast('已选中，按 Ctrl+C 复制'); } return; }
+  if (d.note) { openNote(d.note); return; }
+  if (d.newnote !== undefined) { const [ttype, tid] = (d.newnote || '').split(':'); openNote(null, tid ? { ttype, tid } : null); return; }
+  if (d.ncolor !== undefined) { nfilt.color = d.ncolor; if (pg.notes) pg.notes.page = 1; render(); return; }
+  if (d.delnote) { notes.splice(notes.findIndex(n => n.id === d.delnote), 1); closeLayer(); render(); toast('卡片已删除'); return; }
+  if (d.mnotes) { nfilt.q = mailOf(d.mnotes).addr; nfilt.type = 'email'; page = 'notes'; render(); return; }
+  if (d.nav) { page = d.nav; if (d.go) filt.group = d.go; document.getElementById('side').classList.remove('open'); closeLayer(); render(); scrollTo(0, 0); }
+  else if (d.renew) { const s = renew(d.renew); closeLayer(); render(); toast(`已记录续费，下次扣费 ${fmt(s.next)}`); }
+  else if (d.open) { if (pg.dhist) pg.dhist.page = 1; openDetail(d.open); }
+  else if (d.add !== undefined) openForm();
+  else if (d.edit) openForm(d.edit);
+  else if (d.close !== undefined) closeLayer();
+  else if (d.group) { filt.group = d.group; picked.clear(); if (pg.subs) pg.subs.page = 1; drawSubs(); }
+  else if (d.mail) { filt.email = d.mail; filt.group = 'all'; page = 'subs'; render(); scrollTo(0, 0); }
+  else if (d.addmail !== undefined) openMailForm();
+  else if (d.import !== undefined) openImport();
+  else if (d.htab) { homeTab = d.htab; render(); }
+  else if (d.bell !== undefined) openBell();
+  else if (d.skins !== undefined) openSkins();
+  else if (d.skin) { skin = d.skin; try { localStorage.setItem('accountlist-skin', skin); } catch (err) {} applySkin(); openSkins(); }
+  else if (d.burger !== undefined) document.getElementById('side').classList.toggle('open');
+  else if (d.demo) toast(`原型演示：${d.demo}`);
+  else if (d.logout !== undefined) document.getElementById('login').hidden = false;
+  else if (d.cal) { const k = +d.cal; calMonth = k ? new Date(calMonth.getFullYear(), calMonth.getMonth() + k, 1) : new Date(TODAY.getFullYear(), TODAY.getMonth(), 1); render(); }
+  else if (d.cancel) { const s = subs.find(x => x.id === d.cancel); s.status = 'cancelled'; s.auto = false; closeLayer(); render(); toast('已标记为取消'); }
+  else if (d.convert) { const s = subs.find(x => x.id === d.convert); s.trialEnd = null; closeLayer(); render(); toast('已转为正式订阅'); }
+  else if (d.batch) {
+    if (d.batch === 'renew') { let n = 0; picked.forEach(id => { const s = subs.find(x => x.id === id); if (isLive(s) && !s.trialEnd) { renew(id); n++; } }); toast(`已为 ${n} 项记录续费`); }
+    if (d.batch === 'cancel') { picked.forEach(id => { const s = subs.find(x => x.id === id); if (isLive(s)) { s.status = 'cancelled'; s.auto = false; } }); toast('已标记为取消'); }
+    picked.clear(); render();
+  }
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'st-days') { settings.remindDays = Math.min(60, Math.max(1, +e.target.value || 7)); renderShell(); toast('已保存'); }
+  if (e.target.dataset && e.target.dataset.snooze && e.target.value) { const sv = subs.find(x => x.id === e.target.dataset.snooze); snoozed[sv.id] = D(+e.target.value); render(); toast(`${sv.name} 将在 ${fmt(snoozed[sv.id])} 再次提醒`); return; }
+  if (e.target.id === 'by') { billYear = +e.target.value; if (pg.bills) pg.bills.page = 1; render(); }
+  if (e.target.dataset && e.target.dataset.pgsize) { const k = e.target.dataset.pgsize; pg[k].size = +e.target.value; pg[k].page = 1; repaint(k); }
+});
+document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[role=button]')) { e.preventDefault(); e.target.click(); } if (e.key === 'Escape') { closeLayer(); document.getElementById('side').classList.remove('open'); } });
+document.getElementById('loginForm').addEventListener('submit', e => { e.preventDefault(); document.getElementById('login').hidden = true; toast('登录成功'); });
+
+const tipEl = document.getElementById('tip');
+document.addEventListener('mousemove', e => {
+  const t = e.target.closest && e.target.closest('[data-tip]');
+  if (!t) { tipEl.hidden = true; return; }
+  tipEl.innerHTML = t.dataset.tip.split('｜').map((x, i) => i ? `<div>${esc(x)}</div>` : `<b>${esc(x)}</b>`).join('');
+  tipEl.style.left = e.clientX + 'px'; tipEl.style.top = e.clientY + 'px'; tipEl.hidden = false;
+});
+applySkin();
+render();
+</script>
