@@ -7,6 +7,7 @@ import { calendarToken, digest, getFeishu, saveFeishu, sendFeishu, type FeishuCo
 import { deleteSetting, getSetting, setSetting } from '@/lib/settings';
 import type { Result } from './actions';
 import { log } from '@/lib/activity';
+import { createToken, revokeToken, type TokenScope } from '@/lib/tokens';
 
 export async function changePassword(current: string, next: string): Promise<Result> {
   await requireAuth();
@@ -79,4 +80,23 @@ export async function testFeishu(): Promise<Result> {
   const c = getFeishu();
   if (!c.webhook) return { ok: false, error: '请先填写并保存 Webhook 地址' };
   return sendFeishu(c, digest(c, true)!);
+}
+
+export async function createApiToken(name: string, scope: TokenScope): Promise<Result & { token?: string }> {
+  await requireAuth();
+  const n = String(name ?? '').trim().slice(0, 40);
+  if (!n) return { ok: false, error: '请填写令牌名称，如「Claude Code」' };
+  const r = createToken(n, scope === 'write' ? 'write' : 'read');
+  log('新建 API 令牌', n, scope === 'write' ? '可读写' : '只读');
+  revalidatePath('/settings');
+  return { ok: true, id: r.id, token: r.token };
+}
+
+export async function revokeApiToken(id: number): Promise<Result> {
+  await requireAuth();
+  const name = revokeToken(id);
+  if (!name) return { ok: false, error: '令牌不存在' };
+  log('撤销 API 令牌', name);
+  revalidatePath('/settings');
+  return { ok: true };
 }

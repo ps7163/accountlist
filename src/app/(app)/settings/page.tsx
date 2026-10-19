@@ -1,6 +1,8 @@
 import { totpSecret } from '@/lib/auth';
 import { calendarToken, getFeishu } from '@/lib/notify';
 import { getPrefs, getSetting } from '@/lib/settings';
+import { listTokens } from '@/lib/tokens';
+import { AiAccess } from '@/components/app/AiAccess';
 import { Icon } from '@/components/icons';
 import { ImportButton, RestoreButton } from '@/components/app/ImportExport';
 import { CalendarSetting, FeishuSetting, LogoutOthers, PasswordSetting, PrefsForm, TotpSetting } from '@/components/app/SettingsUI';
@@ -37,6 +39,10 @@ export default function SettingsPage() {
           <div><h3>自动备份</h3><p>服务器每天自动备份一次数据库，保留最近 30 天</p></div>
           <div className="ctl t2" style={{ fontSize: 13 }}>位置：data/backups/　最近一次：{getSetting('last_backup') ?? '尚未备份'}</div>
         </div>
+      </section>
+      <section className="card" id="ai">
+        <div className="card-h"><h2>AI 接入</h2></div>
+        <AiAccess tokens={listTokens()} />
       </section>
       <section className="card" id="security">
         <div className="card-h"><h2>安全</h2></div>
