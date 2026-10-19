@@ -23,6 +23,7 @@
 - **全局搜索**：⌘K / Ctrl+K 搜索订阅、邮箱、支付方式、卡片和常用操作
 - **回收站**：删除的订阅、邮箱、支付方式、卡片保留 30 天，可恢复（连同付费记录和卡片）
 - **操作日志**：新建、编辑、续费、删除、登录、导入导出等操作都有记录，保留一年
+- **AI 接入**：内置 MCP 接口和命令行工具，Claude、Cursor 等 AI 助手可以查询订阅和待办，也可以帮你录入、续费、标记取消（见下文）
 - **添加到手机主屏幕**：iPhone 用 Safari「分享 → 添加到主屏幕」，安卓用 Chrome「安装应用」
 - 6 款顶部皮肤，深色模式，手机端适配
 
@@ -106,6 +107,66 @@ docker compose exec accountlist node -e "new (require('better-sqlite3'))('/app/d
 - **批量导入**：系统设置 → 数据 → 下载模板。模板有「邮箱」「订阅」两张表，带 * 的列必填；表中没有的邮箱和支付方式会自动新建，已存在的订阅（同名、同档位、同邮箱）会跳过。
 - **日历订阅**：系统设置 → 提醒 → 复制日历订阅链接，在手机日历里添加订阅。每个扣费日提前 1 天和「提前提醒天数」各提醒一次。链接相当于钥匙，泄露后可以在设置里重置。
 - **飞书推送**：飞书群设置 → 群机器人 → 添加「自定义机器人」，把 Webhook 地址填到系统设置里。如果机器人开启了「签名校验」，同时填写签名密钥。没有待办的日子不会推送。
+
+## AI 接入（MCP / 命令行）
+
+先在「系统设置 → AI 接入」新建一个 API 令牌。**只读**令牌只能查询；**可读写**令牌还能新建、修改、续费、取消和删除（移入回收站）订阅。令牌只显示一次，数据库里只保存哈希；AI 做的每次修改都会记在操作日志里，并标明是哪个令牌。不用了随时可以撤销。
+
+MCP 地址是 `https://你的域名/api/mcp`（Streamable HTTP，用 `Authorization: Bearer <令牌>` 鉴权）。
+
+**Claude Code**
+
+```bash
+claude mcp add --transport http accountlist https://acct.example.com/api/mcp \
+  --header "Authorization: Bearer al_xxx"
+```
+
+**Cursor、Cherry Studio 等支持远程 MCP 的客户端**
+
+```json
+{ "mcpServers": { "accountlist": { "url": "https://acct.example.com/api/mcp", "headers": { "Authorization": "Bearer al_xxx" } } } }
+```
+
+**Claude Desktop 等只支持本地 MCP 的客户端**：用命令行工具桥接（需要 Node.js 18+）。
+
+```bash
+curl -fsSL https://acct.example.com/accountlist.mjs -o ~/accountlist.mjs
+```
+
+```json
+{
+  "mcpServers": {
+    "accountlist": {
+      "command": "node",
+      "args": ["/Users/你的用户名/accountlist.mjs", "mcp"],
+      "env": { "ACCOUNTLIST_URL": "https://acct.example.com", "ACCOUNTLIST_TOKEN": "al_xxx" }
+    }
+  }
+}
+```
+
+**命令行**：同一个文件也是命令行工具，输出 JSON，适合脚本或让 AI 编程助手直接调用。
+
+```bash
+node accountlist.mjs login https://acct.example.com al_xxx   # 保存到 ~/.config/accountlist.json
+node accountlist.mjs todo                  # 待办
+node accountlist.mjs subs claude           # 搜索订阅
+node accountlist.mjs upcoming 60           # 未来 60 天扣费
+node accountlist.mjs add name=Claude plan=Pro email=me@gmail.com price=140 cycle=month date=2026-11-20 channel="Apple App Store"
+node accountlist.mjs renew 12              # 标记已续费
+node accountlist.mjs help                  # 全部命令
+```
+
+提供的工具：
+
+| 查询 | 修改（需要可读写令牌） |
+|---|---|
+| `get_overview` 总览、`list_todos` 待办、`upcoming_charges` 即将扣费 | `save_subscription` 新建或修改订阅（修改时只传要改的字段） |
+| `list_subscriptions` 订阅列表、`get_subscription` 详情（含取消步骤） | `renew_subscription` 已续费、`cancel_subscription` 已取消、`convert_trial` 试用转正式 |
+| `list_emails`、`list_pay_methods`、`list_notes`、`list_payments` | `snooze_subscription` 稍后提醒、`set_usage` 使用频率、`add_payment` 补记付费 |
+| `get_spending` 支出分析、`get_review` 订阅体检、`get_security_risks` 账号安全、`list_activity` 操作日志 | `delete_subscription` 移入回收站、`save_email`、`save_pay_method`、`save_note` |
+
+手机号默认打码返回。claude.ai 网页版的「自定义连接器」需要 OAuth 登录，暂不支持。
 
 ## 本地开发
 

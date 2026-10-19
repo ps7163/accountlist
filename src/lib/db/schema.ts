@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { integer, sqliteTable, text, index } from 'drizzle-orm/sqlite-core';
+import { integer, sqliteTable, text, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 const timestamps = {
   createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
@@ -131,6 +131,22 @@ export const activity = sqliteTable(
   (t) => [index('activity_at_idx').on(t.at)],
 );
 
+/** AI / 命令行接入用的 API 令牌，只保存 SHA-256 哈希 */
+export const apiTokens = sqliteTable(
+  'api_tokens',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    name: text('name').notNull(),
+    hash: text('hash').notNull(),
+    /** 令牌开头几位，方便辨认 */
+    prefix: text('prefix').notNull(),
+    scope: text('scope', { enum: ['read', 'write'] }).notNull().default('read'),
+    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+    lastUsedAt: text('last_used_at'),
+  },
+  (t) => [uniqueIndex('api_tokens_hash_idx').on(t.hash)],
+);
+
 /** 键值设置：密码哈希、两步验证密钥、提醒天数、皮肤等 */
 export const settings = sqliteTable('settings', {
   key: text('key').primaryKey(),
@@ -144,3 +160,4 @@ export type Payment = typeof payments.$inferSelect;
 export type Note = typeof notes.$inferSelect;
 export type PriceChange = typeof priceChanges.$inferSelect;
 export type Activity = typeof activity.$inferSelect;
+export type ApiToken = typeof apiTokens.$inferSelect;

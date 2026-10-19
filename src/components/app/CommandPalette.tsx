@@ -50,6 +50,7 @@ export function CommandPalette({ index, open, onClose }: { index: SearchIndex; o
       { key: 'a-email', group: '操作', title: '添加邮箱', icon: 'mail', run: go('/emails?new=1') },
       { key: 'a-note', group: '操作', title: '新建备注卡片', icon: 'note', run: () => openNote() },
       { key: 'a-import', group: '操作', title: '导入数据', sub: 'Excel / CSV', icon: 'up', run: go('/settings#data') },
+      { key: 'a-ai', group: '操作', title: 'AI 接入', sub: 'MCP / 命令行令牌', icon: 'gear', run: go('/settings#ai') },
       { key: 'a-backup', group: '操作', title: '下载 JSON 备份', icon: 'down', run: () => { window.location.href = '/api/export?format=json'; } },
     ];
     out.push(...index.subs.filter((s) => hit(s.name, s.plan, s.email, s.category)).slice(0, 8).map((s) => ({ key: `s${s.id}`, group: '订阅', title: `${s.name} ${s.plan}`.trim(), sub: `${s.email} · ${s.price}`, logo: s.name, run: () => openDetail(s.id) })));
