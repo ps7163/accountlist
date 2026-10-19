@@ -19,7 +19,7 @@ function PayForm({ initial, onClose }: { initial?: PayRow; onClose: () => void }
     <Modal title={initial ? '编辑支付方式' : '添加支付方式'} onClose={onClose} width={520}
       footer={<>
         {initial && (confirmDel
-          ? <button className="btn btn-danger-t" style={{ marginRight: 'auto' }} onClick={async () => { if (await run(deletePayMethod(initial.id), '已删除')) onClose(); }}>确认删除{initial.bound ? `（${initial.bound} 个订阅将变为未指定）` : ''}</button>
+          ? <button className="btn btn-danger-t" style={{ marginRight: 'auto' }} onClick={async () => { if (await run(deletePayMethod(initial.id), '已移入回收站')) onClose(); }}>确认删除{initial.bound ? `（${initial.bound} 个订阅将变为未指定）` : ''}</button>
           : <button className="btn-text danger" style={{ marginRight: 'auto' }} onClick={() => setConfirmDel(true)}>删除</button>)}
         {error && <span className="form-err">{error}</span>}
         <button className="btn" onClick={onClose}>取消</button>

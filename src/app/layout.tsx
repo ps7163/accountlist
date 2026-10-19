@@ -5,6 +5,8 @@ export const metadata: Metadata = {
   title: '账号簿',
   description: '管理邮箱、订阅和到期提醒',
   robots: { index: false, follow: false },
+  appleWebApp: { capable: true, title: '账号簿', statusBarStyle: 'default' },
+  icons: { apple: '/icons/apple-touch-icon.png' },
 };
 
 export const viewport: Viewport = {

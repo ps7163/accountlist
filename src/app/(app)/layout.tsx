@@ -4,6 +4,7 @@ import { listEmails, listPayMethods, listSubs, syncRenewals } from '@/lib/querie
 import { securityRisks } from '@/lib/security';
 import { dailyBackup } from '@/lib/io';
 import { getPrefs } from '@/lib/settings';
+import { listNotes } from '@/lib/queries';
 import { AppProvider } from '@/components/app/AppProvider';
 import { Shell, type BellItem } from '@/components/app/Shell';
 
@@ -30,9 +31,22 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         payMethods: payMethods.map((p) => ({ id: p.id, name: p.name, type: p.type })),
         subOptions: subs.map((s) => ({ id: s.id, name: s.name, plan: s.plan, emailAddress: s.emailAddress })),
         remindDays: prefs.remindDays,
+        monthlyCents: subs.reduce((a, s) => a + s.monthlyCents, 0),
+        budgetCents: prefs.budgetCents,
       }}
     >
-      <Shell skin={prefs.skin} displayName={prefs.displayName} bell={bell} riskCount={riskCount}>
+      <Shell
+        skin={prefs.skin}
+        displayName={prefs.displayName}
+        bell={bell}
+        riskCount={riskCount}
+        search={{
+          subs: subs.map((s) => ({ id: s.id, name: s.name, plan: s.plan, email: s.emailAddress, category: s.category, price: s.kind === 'free' ? '免费' : formatYuan(s.priceCents) })),
+          emails: emails.map((e) => ({ id: e.id, address: e.address, provider: e.provider, note: e.note })),
+          pays: payMethods.map((p) => ({ id: p.id, name: p.name, type: p.type })),
+          notes: listNotes().map((n) => ({ id: n.id, title: n.title, body: n.body.slice(0, 200) })),
+        }}
+      >
         {children}
       </Shell>
     </AppProvider>

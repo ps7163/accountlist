@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useApp } from './AppProvider';
 
 /** 点击打开订阅详情抽屉 */
@@ -32,4 +34,20 @@ export function OpenLink({ id, children }: { id: number; children: React.ReactNo
 export function NewSubButton({ children, className = 'btn btn-primary btn-sm' }: { children: React.ReactNode; className?: string }) {
   const { openNew } = useApp();
   return <button type="button" className={className} onClick={() => openNew()}>{children}</button>;
+}
+
+/** 带 ?new=1 打开页面时自动弹出新建订阅（用于主屏幕快捷方式） */
+export function AutoOpenNew() {
+  const { openNew } = useApp();
+  const router = useRouter();
+  const path = usePathname();
+  const sp = useSearchParams();
+  useEffect(() => {
+    if (sp.get('new') !== '1') return;
+    openNew();
+    const q = new URLSearchParams(sp.toString());
+    q.delete('new');
+    router.replace(q.toString() ? `${path}?${q}` : path, { scroll: false });
+  }, [sp, openNew, router, path]);
+  return null;
 }

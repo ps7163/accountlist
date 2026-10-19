@@ -1,5 +1,6 @@
 import { revalidatePath } from 'next/cache';
 import { apiGuard } from '@/lib/api';
+import { log } from '@/lib/activity';
 import { restoreJson } from '@/lib/io';
 
 export const dynamic = 'force-dynamic';
@@ -12,6 +13,9 @@ export async function POST(req: Request) {
   if (!(file instanceof File)) return Response.json({ error: '请选择备份文件' }, { status: 400 });
   if (file.size > 50 * 1024 * 1024) return Response.json({ error: '文件过大' }, { status: 400 });
   const r = await restoreJson(await file.text());
-  if (r.ok) revalidatePath('/', 'layout');
+  if (r.ok) {
+    log('从备份恢复', file.name);
+    revalidatePath('/', 'layout');
+  }
   return Response.json(r, { status: r.ok ? 200 : 400 });
 }

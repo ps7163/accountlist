@@ -8,6 +8,7 @@ import { savePrefs } from '@/app/actions';
 import { SKINS, skinImage } from '@/lib/skins';
 import { Icon, Logo, type IconName } from '../icons';
 import { Tag } from '../ui/Tag';
+import { CommandPalette, type SearchIndex } from './CommandPalette';
 import { useApp } from './AppProvider';
 
 export interface BellItem {
@@ -27,9 +28,12 @@ const NAV: { href: string; label: string; icon: IconName; group?: string }[] = [
   { href: '/pay-methods', label: '支付方式', icon: 'card' },
   { href: '/notes', label: '备注卡片', icon: 'note' },
   { href: '/security', label: '账号安全', icon: 'shield' },
+  { href: '/review', label: '订阅体检', icon: 'pulse' },
   { href: '/calendar', label: '扣费日历', icon: 'cal', group: '账单' },
   { href: '/bills', label: '付费记录', icon: 'bill' },
   { href: '/settings', label: '系统设置', icon: 'gear', group: '系统' },
+  { href: '/activity', label: '操作日志', icon: 'file' },
+  { href: '/trash', label: '回收站', icon: 'trash' },
 ];
 
 const Mark = () => (
@@ -38,12 +42,23 @@ const Mark = () => (
   </span>
 );
 
-export function Shell({ children, skin, displayName, bell, riskCount }: { children: React.ReactNode; skin: string; displayName: string; bell: BellItem[]; riskCount: number }) {
+export function Shell({ children, skin, displayName, bell, riskCount, search }: { children: React.ReactNode; skin: string; displayName: string; bell: BellItem[]; riskCount: number; search: Omit<SearchIndex, 'pages'> }) {
   const path = usePathname();
   const { openNew, openDetail, run } = useApp();
   const [menu, setMenu] = useState(false);
   const [pop, setPop] = useState<'bell' | 'skin' | null>(null);
   const [curSkin, setSkin] = useState(skin);
+  const [cmdk, setCmdk] = useState(false);
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCmdk((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, []);
   useEffect(() => setMenu(false), [path]);
   useEffect(() => setSkin(skin), [skin]);
 
@@ -81,6 +96,9 @@ export function Shell({ children, skin, displayName, bell, riskCount }: { childr
             <svg className="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
           </button>
           <div className="crumb"><b>{title}</b></div>
+          <button className="cmdk-btn" onClick={() => setCmdk(true)} aria-label="全局搜索">
+            <Icon name="search" /><span>搜索</span><kbd>⌘K</kbd>
+          </button>
           <div className="h-r">
             <button className="icon-btn" onClick={() => setPop(pop === 'skin' ? null : 'skin')} aria-label="更换皮肤" title="更换皮肤"><Icon name="skin" /></button>
             <button className="icon-btn" onClick={() => setPop(pop === 'bell' ? null : 'bell')} aria-label="到期提醒">
@@ -93,6 +111,7 @@ export function Shell({ children, skin, displayName, bell, riskCount }: { childr
         <main className="content"><div className="wrap">{children}</div></main>
       </div>
 
+      <CommandPalette index={{ ...search, pages: NAV.map(({ href, label, icon }) => ({ href, label, icon })) }} open={cmdk} onClose={() => setCmdk(false)} />
       {pop && <div className="mask" style={{ background: 'transparent' }} onClick={() => setPop(null)} />}
       {pop === 'bell' && (
         <div className="pop" role="dialog" aria-label="到期提醒">

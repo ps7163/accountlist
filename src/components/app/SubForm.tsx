@@ -2,8 +2,8 @@
 
 import { Fragment, useEffect, useState } from 'react';
 import { getSubDetail, saveSubscription, type SubInput } from '@/app/actions';
-import { addDays, CYCLE_UNIT, formatYuan, today, type Cycle } from '@/lib/billing';
-import { CATEGORIES, CHANNELS, LOGINS, MFAS, TEMPLATES } from '@/lib/constants';
+import { addDays, CYCLE_UNIT, PER_MONTH, formatYuan, today, type Cycle } from '@/lib/billing';
+import { CATEGORIES, CHANNELS, LOGINS, MFAS, TEMPLATES, USAGES } from '@/lib/constants';
 import { Logo } from '../icons';
 import { Modal } from '../ui/Modal';
 import { useApp } from './AppProvider';
@@ -13,7 +13,7 @@ export type SubFormInitial = Omit<SubInput, 'id'>;
 function blank(emailId: number): SubFormInitial {
   return {
     name: '', plan: '', category: 'AI', emailId, kind: 'sub', price: '', cycle: 'month', date: addDays(today(), 30), trial: false, autoRenew: true,
-    status: 'active', channel: 'Apple App Store', payMethodId: null, newPayName: '', url: '', manageUrl: '', login: 'password', mfa: 'none', note: '',
+    status: 'active', channel: 'Apple App Store', payMethodId: null, newPayName: '', url: '', manageUrl: '', login: 'password', mfa: 'none', usage: '', note: '',
   };
 }
 
@@ -46,7 +46,7 @@ export function SubForm({ editId, preset, onClose }: { editId?: number; preset?:
       setV({
         name: s.name, plan: s.plan, category: s.category, emailId: s.emailId, kind: s.kind, price: String(s.priceCents / 100), cycle: s.cycle,
         date: s.trialEnd ?? s.nextDate ?? today(), trial: !!s.trialEnd, autoRenew: s.autoRenew, status: s.status, channel: s.channel || CHANNELS[0],
-        payMethodId: s.payMethodId, newPayName: '', url: s.url, manageUrl: s.manageUrl, login: s.login, mfa: s.mfa, note: s.note,
+        payMethodId: s.payMethodId, newPayName: '', url: s.url, manageUrl: s.manageUrl, login: s.login, mfa: s.mfa, usage: s.usage, note: s.note,
       });
     });
   }, [editId, onClose]);
@@ -64,6 +64,13 @@ export function SubForm({ editId, preset, onClose }: { editId?: number; preset?:
   const q = v.name.trim().toLowerCase();
   const sugs = editId ? [] : TEMPLATES.filter((t) => !q || t.name.toLowerCase().includes(q)).slice(0, 6);
   const isSub = v.kind === 'sub', isFree = v.kind === 'free';
+  const addMonthly = isSub && !v.trial ? Math.round((Number(v.price) || 0) * 100 * PER_MONTH[v.cycle]) : 0;
+  const budgetHint = data.budgetCents && addMonthly
+    ? (() => {
+        const total = data.monthlyCents + addMonthly;
+        return { over: total > data.budgetCents, text: `加上它每月共 ${formatYuan(total, 0)}，${total > data.budgetCents ? `超出预算 ${formatYuan(total - data.budgetCents, 0)}` : `预算还剩 ${formatYuan(data.budgetCents - total, 0)}`}` };
+      })()
+    : null;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -140,7 +147,7 @@ export function SubForm({ editId, preset, onClose }: { editId?: number; preset?:
           </div>
         </div>
 
-        <div className="form-sec">登录与安全</div>
+        <div className="form-sec">登录与使用</div>
         <div className="fg">
           <div className="f">
             <label htmlFor="f-login">登录方式</label>
@@ -155,6 +162,13 @@ export function SubForm({ editId, preset, onClose }: { editId?: number; preset?:
               {Object.entries(MFAS).map(([k, t]) => <option key={k} value={k}>{t}</option>)}
             </select>
           </div>
+          <div className="f">
+            <label htmlFor="f-usage">使用频率</label>
+            <select className="sel" id="f-usage" value={v.usage} onChange={(e) => set('usage', e.target.value)}>
+              {Object.entries(USAGES).map(([k, t]) => <option key={k} value={k}>{t}</option>)}
+            </select>
+            <span className="hint">「订阅体检」会据此找出花钱多、用得少的订阅</span>
+          </div>
         </div>
 
         <div className="form-sec">计费信息</div>
@@ -168,6 +182,7 @@ export function SubForm({ editId, preset, onClose }: { editId?: number; preset?:
               <div className="f">
                 <label htmlFor="f-price" className="req">金额</label>
                 <div className="affix"><span>¥</span><input className="inp num" type="number" id="f-price" step="0.01" min="0" value={v.price} onChange={(e) => set('price', e.target.value)} placeholder="0.00" style={{ width: '100%' }} /></div>
+                {!editId && budgetHint && <span className="hint" style={{ color: budgetHint.over ? 'var(--red-text)' : undefined }}>{budgetHint.text}</span>}
               </div>
               {isSub && (
                 <div className="f">

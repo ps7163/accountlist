@@ -6,6 +6,7 @@ import { hashPassword, newTotpSecret, requireAuth, revokeOtherSessions, totpSecr
 import { calendarToken, digest, getFeishu, saveFeishu, sendFeishu, type FeishuConfig } from '@/lib/notify';
 import { deleteSetting, getSetting, setSetting } from '@/lib/settings';
 import type { Result } from './actions';
+import { log } from '@/lib/activity';
 
 export async function changePassword(current: string, next: string): Promise<Result> {
   await requireAuth();
@@ -14,6 +15,7 @@ export async function changePassword(current: string, next: string): Promise<Res
   setSetting('password_hash', hashPassword(next));
   setSetting('password_changed', new Date().toISOString());
   await revokeOtherSessions();
+  log('修改密码');
   revalidatePath('/settings');
   return { ok: true };
 }
@@ -29,6 +31,7 @@ export async function enableTotp(secret: string, code: string): Promise<Result> 
   await requireAuth();
   if (!/^[A-Z2-7]{16,}$/.test(secret) || !verifyTotp(code, secret)) return { ok: false, error: '验证码不正确，请确认手机时间准确后重试' };
   setSetting('totp_secret', secret);
+  log('开启两步验证');
   revalidatePath('/settings');
   return { ok: true };
 }
@@ -38,6 +41,7 @@ export async function disableTotp(code: string): Promise<Result> {
   const secret = totpSecret();
   if (secret && !verifyTotp(code, secret)) return { ok: false, error: '验证码不正确' };
   deleteSetting('totp_secret');
+  log('关闭两步验证');
   revalidatePath('/settings');
   return { ok: true };
 }
@@ -45,6 +49,7 @@ export async function disableTotp(code: string): Promise<Result> {
 export async function logoutOthers(): Promise<Result> {
   await requireAuth();
   await revokeOtherSessions();
+  log('退出其他设备');
   return { ok: true };
 }
 

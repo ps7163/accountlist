@@ -7,6 +7,7 @@ import { Pager } from '@/components/ui/Pager';
 import { FilterSelect, SearchBox } from '@/components/app/Filters';
 import { SubTable } from '@/components/app/SubTable';
 import { ImportButton } from '@/components/app/ImportExport';
+import { AutoOpenNew } from '@/components/app/Opener';
 
 const GROUPS: [string, string][] = [['all', '全部'], ['soon', '需处理'], ['active', '使用中'], ['trial', '试用中'], ['ended', '已取消/过期'], ['once', '买断'], ['free', '仅注册']];
 const inGroup = (s: SubView, g: string) => g === 'all' || (g === 'soon' ? s.state.alert : s.state.group === g);
@@ -20,6 +21,8 @@ export default async function SubscriptionsPage({ searchParams }: { searchParams
   const cat = param(sp, 'cat');
   const pay = Number(param(sp, 'pay')) || 0;
   const mfa = param(sp, 'mfa');
+  const missing = param(sp, 'missing');
+  const paidLive = (s: SubView) => s.kind !== 'free' && s.status === 'active';
   const group = GROUPS.some(([k]) => k === param(sp, 'group')) ? param(sp, 'group') : 'all';
   const emails = listEmails();
   const payMethods = listPayMethods();
@@ -31,6 +34,7 @@ export default async function SubscriptionsPage({ searchParams }: { searchParams
       (!cat || s.category === cat) &&
       (!pay || s.payMethodId === pay) &&
       (!mfa || s.mfa === mfa) &&
+      (!missing || (paidLive(s) && (missing === 'manage' ? !s.manageUrl && s.kind === 'sub' : missing === 'pay' ? !s.payMethodId : missing === 'channel' ? !s.channel : true))) &&
       (!q || [s.name, s.plan, s.payName, s.note, s.channel, s.emailAddress, s.category].join(' ').toLowerCase().includes(q)),
   );
   const rows = base
@@ -57,15 +61,17 @@ export default async function SubscriptionsPage({ searchParams }: { searchParams
         <ImportButton />
         <a className="btn" href="/api/export?format=xlsx"><Icon name="down" />导出</a>
       </div>
-      {(payName || mfa) && (
+      {(payName || mfa || missing) && (
         <div className="batch" style={{ background: 'var(--fill)', color: 'var(--text-2)' }}>
           {payName && <>正在查看绑定「{payName}」的订阅</>}
           {mfa === 'none' && <>正在查看未开启两步验证的订阅</>}
-          <Link className="btn-text" href={hrefWith('/subscriptions', sp, { pay: null, mfa: null, page: null })}>清除</Link>
+          {missing && <>正在查看{{ manage: '没填管理订阅链接', pay: '没指定支付方式', channel: '没填付费渠道' }[missing] ?? ''}的订阅，点击行可以补充</>}
+          <Link className="btn-text" href={hrefWith('/subscriptions', sp, { pay: null, mfa: null, missing: null, page: null })}>清除</Link>
         </div>
       )}
       {rows.length ? <SubTable rows={P.items} /> : <div className="empty">{base.length || group !== 'all' ? '没有符合条件的订阅' : '还没有订阅，点右上角「新建订阅」添加第一个'}</div>}
       <Pager p={P} path="/subscriptions" sp={sp} />
+      <AutoOpenNew />
     </section>
   );
 }

@@ -9,11 +9,12 @@ const timestamps = {
 /** 邮箱账号：整个系统的根 */
 export const emails = sqliteTable('emails', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  address: text('address').notNull().unique(),
+  address: text('address').notNull(),
   provider: text('provider').notNull().default('其他'),
   phone: text('phone').notNull().default(''),
   recovery: text('recovery').notNull().default(''),
   note: text('note').notNull().default(''),
+  deletedAt: text('deleted_at'),
   ...timestamps,
 });
 
@@ -25,6 +26,7 @@ export const payMethods = sqliteTable('pay_methods', {
   /** 有效期，格式 YYYY-MM；为空表示长期有效 */
   expireMonth: text('expire_month'),
   note: text('note').notNull().default(''),
+  deletedAt: text('deleted_at'),
   ...timestamps,
 });
 
@@ -60,6 +62,11 @@ export const subscriptions = sqliteTable(
     note: text('note').notNull().default(''),
     /** 稍后提醒：在该日期之前不出现在待办里 */
     snoozeUntil: text('snooze_until'),
+    /** 使用频率：daily / weekly / monthly / rarely，空表示未标记 */
+    usage: text('usage').notNull().default(''),
+    /** 上次体检时确认「保留」的时间 */
+    reviewedAt: text('reviewed_at'),
+    deletedAt: text('deleted_at'),
     ...timestamps,
   },
   (t) => [index('subs_email_idx').on(t.emailId), index('subs_next_idx').on(t.nextDate)],
@@ -92,8 +99,37 @@ export const notes = sqliteTable('notes', {
   body: text('body').notNull().default(''),
   color: text('color').notNull().default('yellow'),
   pinned: integer('pinned', { mode: 'boolean' }).notNull().default(false),
+  deletedAt: text('deleted_at'),
   ...timestamps,
 });
+
+/** 价格变动记录 */
+export const priceChanges = sqliteTable(
+  'price_changes',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    subscriptionId: integer('subscription_id')
+      .notNull()
+      .references(() => subscriptions.id, { onDelete: 'cascade' }),
+    date: text('date').notNull(),
+    oldCents: integer('old_cents').notNull(),
+    newCents: integer('new_cents').notNull(),
+  },
+  (t) => [index('price_changes_sub_idx').on(t.subscriptionId)],
+);
+
+/** 操作日志 */
+export const activity = sqliteTable(
+  'activity',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    at: text('at').notNull().default(sql`(datetime('now'))`),
+    action: text('action').notNull(),
+    target: text('target').notNull().default(''),
+    detail: text('detail').notNull().default(''),
+  },
+  (t) => [index('activity_at_idx').on(t.at)],
+);
 
 /** 键值设置：密码哈希、两步验证密钥、提醒天数、皮肤等 */
 export const settings = sqliteTable('settings', {
@@ -106,3 +142,5 @@ export type PayMethod = typeof payMethods.$inferSelect;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type Payment = typeof payments.$inferSelect;
 export type Note = typeof notes.$inferSelect;
+export type PriceChange = typeof priceChanges.$inferSelect;
+export type Activity = typeof activity.$inferSelect;

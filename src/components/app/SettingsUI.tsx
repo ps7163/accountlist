@@ -8,12 +8,21 @@ import { Modal } from '../ui/Modal';
 import { Tag } from '../ui/Tag';
 import { useApp } from './AppProvider';
 
-export function PrefsForm({ remindDays, displayName }: { remindDays: number; displayName: string }) {
+export function PrefsForm({ remindDays, displayName, budgetCents }: { remindDays: number; displayName: string; budgetCents: number }) {
   const { run } = useApp();
   const [days, setDays] = useState(String(remindDays));
   const [name, setName] = useState(displayName);
+  const [budget, setBudget] = useState(budgetCents ? String(budgetCents / 100) : '');
   return (
     <>
+      <div className="set">
+        <div><h3>月度预算</h3><p>每月订阅支出的上限。超出时工作台会提醒，新建订阅时也会提示还剩多少</p></div>
+        <div className="ctl">
+          <div className="affix" style={{ width: 160 }}><span>¥</span><input className="inp num" type="number" min={0} step={1} value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="不设预算" aria-label="月度预算" style={{ width: '100%' }} /></div>
+          <span>/ 月</span>
+          <button className="btn" onClick={() => run(savePrefs({ budget }), budget ? '预算已保存' : '已取消预算')}>保存</button>
+        </div>
+      </div>
       <div className="set">
         <div><h3>提前提醒天数</h3><p>到期前多少天在工作台、铃铛和推送中提醒</p></div>
         <div className="ctl">

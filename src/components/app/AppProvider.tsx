@@ -29,6 +29,9 @@ export interface ShellData {
   payMethods: PayOption[];
   subOptions: SubOption[];
   remindDays: number;
+  /** 当前每月固定支出与月度预算（分） */
+  monthlyCents: number;
+  budgetCents: number;
 }
 
 interface AppApi {

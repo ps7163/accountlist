@@ -11,7 +11,7 @@ export default function SettingsPage() {
     <>
       <section className="card" id="remind">
         <div className="card-h"><h2>提醒</h2></div>
-        <PrefsForm remindDays={prefs.remindDays} displayName={prefs.displayName} />
+        <PrefsForm remindDays={prefs.remindDays} displayName={prefs.displayName} budgetCents={prefs.budgetCents} />
         <CalendarSetting token={calendarToken()} />
         <FeishuSetting initial={getFeishu()} />
       </section>

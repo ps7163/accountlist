@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { addPayment, convertTrial, deletePayment, deleteSubscription, getSubDetail, markRenewed } from '@/app/actions';
 import { CYCLE_LABEL, CYCLE_UNIT, diffDays, formatYuan, today, weekday } from '@/lib/billing';
-import { GUIDES, LOGINS, MFAS, maskPhone } from '@/lib/constants';
+import { GUIDES, LOGINS, MFAS, USAGES, maskPhone } from '@/lib/constants';
 import { Logo } from '../icons';
 import { Drawer } from '../ui/Modal';
 import { StateTag, Tag } from '../ui/Tag';
@@ -45,7 +45,7 @@ export function DetailDrawer({ id, reloadKey, onClose }: { id: number; reloadKey
       footer={
         <>
           {confirmDel ? (
-            <button className="btn btn-danger-t" style={{ marginRight: 'auto' }} onClick={async () => { if (await run(deleteSubscription(s.id), `已删除 ${s.name}`)) onClose(); }}>确认删除</button>
+            <button className="btn btn-danger-t" style={{ marginRight: 'auto' }} onClick={async () => { if (await run(deleteSubscription(s.id), `${s.name} 已移入回收站`)) onClose(); }}>确认删除</button>
           ) : (
             <button className="btn-text danger" style={{ marginRight: 'auto' }} onClick={() => setConfirmDel(true)}>删除</button>
           )}
@@ -85,6 +85,10 @@ export function DetailDrawer({ id, reloadKey, onClose }: { id: number; reloadKey
           {s.kind === 'sub' && kv('自动续费', s.autoRenew ? '是' : '否')}
           {s.kind !== 'free' && kv('付费渠道', s.channel || '—')}
           {s.kind !== 'free' && kv('支付方式', s.payName || '—')}
+          {kv('使用频率', s.usage ? USAGES[s.usage] : <span className="t3">未标记</span>)}
+          {d.priceChanges.length > 0 && kv('价格变动', <div style={{ display: 'grid', gap: 2 }}>{d.priceChanges.slice(0, 5).map((c) => (
+            <span key={c.id} className="num">{c.date}　{formatYuan(c.oldCents)} → {formatYuan(c.newCents)} {c.newCents > c.oldCents ? <Tag tone="red">涨价</Tag> : <Tag tone="green">降价</Tag>}</span>
+          ))}</div>, true)}
         </dl>
       </div>
       <div>

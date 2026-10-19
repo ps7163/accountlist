@@ -5,6 +5,8 @@ export const CATEGORIES = ['AI', '开发工具', '影音', '存储', '工具', '
 export const PAY_TYPES = ['信用卡', '借记卡', 'Apple ID', 'Google Play', 'PayPal', '支付宝', '微信支付', '其他'];
 export const LOGINS: Record<string, string> = { password: '邮箱 + 密码', google: 'Google 一键登录', apple: 'Apple 登录', phone: '手机号验证码', code: '邮箱验证码' };
 export const MFAS: Record<string, string> = { app: '验证器 App', sms: '短信验证码', none: '未开启' };
+/** 使用频率；空字符串表示未标记 */
+export const USAGES: Record<string, string> = { '': '未标记', daily: '每天用', weekly: '每周用', monthly: '每月偶尔用', rarely: '几乎不用' };
 export const NOTE_COLORS: [string, string][] = [['yellow', '便签黄'], ['blue', '天空蓝'], ['green', '薄荷绿'], ['pink', '樱花粉'], ['purple', '薰衣草'], ['gray', '素白']];
 
 export function providerOf(address: string): string {

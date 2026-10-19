@@ -8,7 +8,7 @@ import { CATEGORIES, LOGINS, MFAS, providerOf } from './constants';
 import { listEmails, listPayMethods, listPayments, listSubs } from './queries';
 import { getSetting, setSetting } from './settings';
 
-const { emails, payMethods, subscriptions, payments, notes, settings } = schema;
+const { emails, payMethods, subscriptions, payments, notes, settings, priceChanges } = schema;
 void settings;
 
 /* ---------------- 导出 ---------------- */
@@ -77,6 +77,7 @@ export function exportJson(): string {
       subscriptions: db.select().from(subscriptions).all(),
       payments: db.select().from(payments).all(),
       notes: db.select().from(notes).all(),
+      priceChanges: db.select().from(priceChanges).all(),
       settings: db.select().from(settings).all().filter((s) => ['remind_days', 'skin', 'display_name'].includes(s.key)),
     },
     null,
@@ -293,6 +294,15 @@ export async function dailyBackup(): Promise<void> {
   const t = today();
   if (getSetting('last_backup') === t) return;
   setSetting('last_backup', t);
+  // 每天顺便清理：回收站超过 30 天的项目、一年前的操作日志
+  try {
+    const { purgeOlderThan } = await import('./trash');
+    const { pruneActivity } = await import('./activity');
+    purgeOlderThan(30);
+    pruneActivity();
+  } catch (e) {
+    console.error('每日清理失败', e);
+  }
   fs.mkdirSync(backupDir(), { recursive: true });
   await rawSqlite().backup(path.join(backupDir(), `accountlist-${t}.db`));
   const files = fs.readdirSync(backupDir()).filter((f) => /^accountlist-.*\.db$/.test(f)).sort();
@@ -314,6 +324,7 @@ export async function restoreJson(text: string): Promise<{ ok: boolean; error?: 
   try {
     db.transaction((tx) => {
       tx.delete(notes).run();
+      tx.delete(priceChanges).run();
       tx.delete(payments).run();
       tx.delete(subscriptions).run();
       tx.delete(payMethods).run();
@@ -327,6 +338,7 @@ export async function restoreJson(text: string): Promise<{ ok: boolean; error?: 
       ins('订阅', subscriptions, data.subscriptions);
       ins('付费记录', payments, data.payments);
       ins('备注卡片', notes, data.notes);
+      ins('价格变动', priceChanges, data.priceChanges);
       for (const s of (data.settings ?? []) as { key: string; value: string }[]) if (['remind_days', 'skin', 'display_name'].includes(s.key)) setSetting(s.key, String(s.value));
     });
   } catch (e) {

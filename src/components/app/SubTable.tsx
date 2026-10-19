@@ -29,7 +29,7 @@ export function SubTable({ rows }: { rows: SubView[] }) {
           <button className="btn-text" onClick={() => batch('renew', '续费')}>标记已续费</button>
           <button className="btn-text" onClick={() => batch('cancel', '取消')}>标记已取消</button>
           {confirmDel ? (
-            <button className="btn-text danger" onClick={() => batch('delete', '删除')}>确认删除 {picked.size} 项？</button>
+            <button className="btn-text danger" onClick={() => batch('delete', '移入回收站')}>确认删除 {picked.size} 项？</button>
           ) : (
             <button className="btn-text danger" onClick={() => setConfirmDel(true)}>删除</button>
           )}
@@ -51,7 +51,7 @@ export function SubTable({ rows }: { rows: SubView[] }) {
                 <td><div className="svc"><Logo name={s.name} /><div><div>{s.name}</div><div className="sub">{[s.plan, s.category].filter(Boolean).join(' · ')}</div></div></div></td>
                 <td className="t2">{s.emailAddress}</td>
                 <td>{s.channel ? <><div>{s.channel}</div><div className="sub">{s.payName || '—'}</div></> : <span className="t3">—</span>}</td>
-                <td className="r">{s.kind === 'free' ? <span className="t3">免费</span> : <span className="num">{formatYuan(s.priceCents)}</span>}</td>
+                <td className="r">{s.kind === 'free' ? <span className="t3">免费</span> : <>{s.lastChange && s.lastChange.newCents > s.lastChange.oldCents && <span className="tag tg-red" title={`${s.lastChange.date} 由 ${formatYuan(s.lastChange.oldCents)} 涨到 ${formatYuan(s.lastChange.newCents)}`} style={{ marginRight: 6 }}>涨价</span>}<span className="num">{formatYuan(s.priceCents)}</span></>}</td>
                 <td className="t2">{s.kind === 'free' ? '—' : s.kind === 'once' ? '一次性' : CYCLE_LABEL[s.cycle]}</td>
                 <td className="num">{s.kind === 'sub' ? s.trialEnd ?? s.nextDate ?? '—' : '—'}</td>
                 <td><StateTag state={s.state} /></td>

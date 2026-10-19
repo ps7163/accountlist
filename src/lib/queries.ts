@@ -1,10 +1,10 @@
 import 'server-only';
-import { and, asc, desc, eq, isNotNull, lt, or } from 'drizzle-orm';
+import { and, asc, desc, eq, isNotNull, isNull, lt, or } from 'drizzle-orm';
 import { db, schema } from './db';
 import { monthlyCents, rollForward, subState, today, type Cycle, type Kind, type Status, type SubState } from './billing';
 import { getPrefs } from './settings';
 
-const { emails, payMethods, subscriptions, payments, notes } = schema;
+const { emails, payMethods, subscriptions, payments, notes, priceChanges } = schema;
 
 export interface SubView {
   id: number;
@@ -31,6 +31,10 @@ export interface SubView {
   mfa: string;
   note: string;
   snoozeUntil: string | null;
+  usage: string;
+  reviewedAt: string | null;
+  /** 最近一次价格变动 */
+  lastChange: { date: string; oldCents: number; newCents: number } | null;
   state: SubState;
   monthlyCents: number;
 }
@@ -49,6 +53,7 @@ export function syncRenewals(): number {
         eq(subscriptions.kind, 'sub'),
         eq(subscriptions.status, 'active'),
         eq(subscriptions.autoRenew, true),
+        isNull(subscriptions.deletedAt),
         or(lt(subscriptions.nextDate, t), and(isNotNull(subscriptions.trialEnd), lt(subscriptions.trialEnd, t))),
       ),
     )
@@ -72,9 +77,12 @@ export function listSubs(): SubView[] {
     .select({ s: subscriptions, emailAddress: emails.address, emailProvider: emails.provider, payName: payMethods.name })
     .from(subscriptions)
     .innerJoin(emails, eq(subscriptions.emailId, emails.id))
-    .leftJoin(payMethods, eq(subscriptions.payMethodId, payMethods.id))
+    .leftJoin(payMethods, and(eq(subscriptions.payMethodId, payMethods.id), isNull(payMethods.deletedAt)))
+    .where(isNull(subscriptions.deletedAt))
     .orderBy(asc(subscriptions.name))
     .all();
+  const changes = new Map<number, { date: string; oldCents: number; newCents: number }>();
+  for (const c of db.select().from(priceChanges).orderBy(asc(priceChanges.date), asc(priceChanges.id)).all()) changes.set(c.subscriptionId, c);
   return rows.map(({ s, emailAddress, emailProvider, payName }) => ({
     id: s.id,
     name: s.name,
@@ -92,7 +100,7 @@ export function listSubs(): SubView[] {
     autoRenew: s.autoRenew,
     status: s.status,
     channel: s.channel,
-    payMethodId: s.payMethodId,
+    payMethodId: payName ? s.payMethodId : null,
     payName: payName ?? '',
     url: s.url,
     manageUrl: s.manageUrl,
@@ -100,14 +108,17 @@ export function listSubs(): SubView[] {
     mfa: s.mfa,
     note: s.note,
     snoozeUntil: s.snoozeUntil,
+    usage: s.usage,
+    reviewedAt: s.reviewedAt,
+    lastChange: changes.get(s.id) ?? null,
     state: subState(s, t, remindDays),
     monthlyCents: monthlyCents(s),
   }));
 }
 
-export const listEmails = () => db.select().from(emails).orderBy(asc(emails.id)).all();
-export const listPayMethods = () => db.select().from(payMethods).orderBy(asc(payMethods.id)).all();
-export const listNotes = () => db.select().from(notes).orderBy(desc(notes.pinned), desc(notes.updatedAt)).all();
+export const listEmails = () => db.select().from(emails).where(isNull(emails.deletedAt)).orderBy(asc(emails.id)).all();
+export const listPayMethods = () => db.select().from(payMethods).where(isNull(payMethods.deletedAt)).orderBy(asc(payMethods.id)).all();
+export const listNotes = () => db.select().from(notes).where(isNull(notes.deletedAt)).orderBy(desc(notes.pinned), desc(notes.updatedAt)).all();
 
 export interface PaymentView {
   id: number;
@@ -141,7 +152,8 @@ export function listPayments(): PaymentView[] {
     .from(payments)
     .innerJoin(subscriptions, eq(payments.subscriptionId, subscriptions.id))
     .innerJoin(emails, eq(subscriptions.emailId, emails.id))
-    .leftJoin(payMethods, eq(subscriptions.payMethodId, payMethods.id))
+    .leftJoin(payMethods, and(eq(subscriptions.payMethodId, payMethods.id), isNull(payMethods.deletedAt)))
+    .where(isNull(subscriptions.deletedAt))
     .orderBy(desc(payments.date), desc(payments.id))
     .all()
     .map((r) => ({ ...r, payName: r.payName ?? '' }));
@@ -152,7 +164,7 @@ export function paymentsOf(subId: number) {
 }
 
 export function notesOf(type: 'email' | 'sub', id: number) {
-  return db.select().from(notes).where(and(eq(notes.targetType, type), eq(notes.targetId, id))).orderBy(desc(notes.pinned), desc(notes.updatedAt)).all();
+  return db.select().from(notes).where(and(eq(notes.targetType, type), eq(notes.targetId, id), isNull(notes.deletedAt))).orderBy(desc(notes.pinned), desc(notes.updatedAt)).all();
 }
 
 /** 支付方式 60 天内到期 */
@@ -164,4 +176,8 @@ export function expiringPayMethods(list = listPayMethods(), t = today()) {
     const now = new Date(t + 'T00:00:00Z');
     return (end.getTime() - now.getTime()) / 86400000 <= 60;
   });
+}
+
+export function priceChangesOf(subId: number) {
+  return db.select().from(priceChanges).where(eq(priceChanges.subscriptionId, subId)).orderBy(desc(priceChanges.date), desc(priceChanges.id)).all();
 }

@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { CYCLE_UNIT, PER_MONTH, formatYuan, projectedDates, today, weekday } from '@/lib/billing';
 import { expiringPayMethods, listEmails, listPayMethods, listPayments, listSubs } from '@/lib/queries';
-import { getPrefs } from '@/lib/settings';
+import { getPrefs, getSetting } from '@/lib/settings';
+import { reviewDue } from '@/lib/review';
 import { hrefWith, paginate, param, type Search } from '@/lib/paging';
 import { Icon, Logo, type IconName } from '@/components/icons';
 import { StateTag, Tag } from '@/components/ui/Tag';
@@ -55,15 +56,21 @@ export default async function Workbench({ searchParams }: { searchParams: Promis
   });
   const mMax = Math.max(1, ...byMail.map((x) => x.m));
 
-  type TodoItem = { kind: 'sub'; s: (typeof subs)[number] } | { kind: 'pay'; p: (typeof payAlerts)[number] };
-  const todos: TodoItem[] = [...alerts.map((s) => ({ kind: 'sub' as const, s })), ...payAlerts.map((p) => ({ kind: 'pay' as const, p }))];
+  type TodoItem = { kind: 'sub'; s: (typeof subs)[number] } | { kind: 'pay'; p: (typeof payAlerts)[number] } | { kind: 'review' } | { kind: 'budget' };
+  const overBudget = prefs.budgetCents > 0 && monthly > prefs.budgetCents;
+  const todos: TodoItem[] = [
+    ...(overBudget ? [{ kind: 'budget' as const }] : []),
+    ...alerts.map((s) => ({ kind: 'sub' as const, s })),
+    ...payAlerts.map((p) => ({ kind: 'pay' as const, p })),
+    ...(reviewDue(getSetting('last_review'), subs, t) ? [{ kind: 'review' as const }] : []),
+  ];
   const tabs: [string, string, number | null][] = [['todo', '待办', todos.length], ['up', '即将扣费', upcoming.length], ['spend', '支出分析', null], ['trial', '试用中', trials.length], ['mail', '按邮箱', null]];
   const pg = param(sp, 'p');
   const PT = paginate(todos, pg, '', 5), PU = paginate(upcoming, pg, '', 5), PR = paginate(trials, pg, '', 5), PM = paginate(byMail, pg, '', 5);
 
   const h = Number(new Intl.DateTimeFormat('en-US', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Asia/Shanghai' }).format(new Date()));
   const greet = h < 6 ? '夜深了' : h < 12 ? '早上好' : h < 18 ? '下午好' : '晚上好';
-  const kpi = (icon: IconName, tone: string, label: string, value: React.ReactNode, sub: string) => (
+  const kpi = (icon: IconName, tone: string, label: string, value: React.ReactNode, sub: React.ReactNode) => (
     <div className="card kpi">
       <div className="kpi-top"><span className="kpi-l">{label}</span><span className="kpi-ic" style={{ background: `var(--${tone}-soft)`, color: `var(--${tone})` }}><Icon name={icon} /></span></div>
       <div className="kpi-v num">{value}</div>
@@ -82,13 +89,18 @@ export default async function Workbench({ searchParams }: { searchParams: Promis
           <Icon name="warn" />
           <div className="grow">
             <b>你有 {todos.length} 项待办：</b>
-            {[alerts.length && `${alerts.length} 个订阅即将到期或已过期`, payAlerts.length && `${payAlerts.length} 个支付方式即将过期`].filter(Boolean).join('，')}
+            {[overBudget && '每月支出超出预算', alerts.length && `${alerts.length} 个订阅即将到期或已过期`, payAlerts.length && `${payAlerts.length} 个支付方式即将过期`].filter(Boolean).join('，') || '该做订阅体检了'}
           </div>
           <Link className="btn-text" href="/?tab=todo">去处理</Link>
         </div>
       )}
       <section className="kpis">
-        {kpi('wallet', 'blue', '每月固定支出', formatYuan(monthly, 0), `折合每天 ${formatYuan(monthly / 30)}`)}
+        {kpi('wallet', overBudget ? 'red' : 'blue', '每月固定支出', formatYuan(monthly, 0), prefs.budgetCents ? (
+          <span style={{ display: 'grid', gap: 4 }}>
+            <span className="budget-bar"><i style={{ width: `${Math.min(100, (monthly / prefs.budgetCents) * 100).toFixed(0)}%`, background: overBudget ? 'var(--red)' : monthly / prefs.budgetCents > 0.85 ? 'var(--orange)' : 'var(--c1)' }} /></span>
+            <span style={overBudget ? { color: 'var(--red-text)' } : undefined}>预算 {formatYuan(prefs.budgetCents, 0)} · 已用 {((monthly / prefs.budgetCents) * 100).toFixed(0)}%</span>
+          </span>
+        ) : `折合每天 ${formatYuan(monthly / 30)}`)}
         {kpi('bill', 'green', `${year} 年已支出`, formatYuan(spentYear, 0), `上月 ${formatYuan(prev.paid, 0)} · 本月已付 ${formatYuan(cur.paid, 0)}`)}
         {kpi('trend', 'orange', '全年预计支出', formatYuan(monthly * 12, 0), '按当前在用订阅推算')}
         {kpi('layers', 'purple', '在用订阅', <>{live.length - trials.length}<small> 个</small></>, `试用 ${trials.length} 个 · 仅注册 ${subs.filter((s) => s.kind === 'free').length} 个`)}
@@ -106,7 +118,25 @@ export default async function Workbench({ searchParams }: { searchParams: Promis
         {tab === 'todo' && (
           <div className="card-b" style={{ paddingTop: 4 }}>
             {PT.items.map((it) =>
-              it.kind === 'pay' ? (
+              it.kind === 'review' ? (
+                <div className="todo" key="review">
+                  <span className="pay-ic lg"><Icon name="pulse" /></span>
+                  <div style={{ minWidth: 0 }}>
+                    <div className="nm">该做订阅体检了 <Tag tone="blue">建议</Tag></div>
+                    <div className="t3 ell" style={{ fontSize: 12 }}>找出花得多用得少、重复和涨价的订阅，每 90 天一次</div>
+                  </div>
+                  <div className="todo-a"><Link className="btn btn-sm btn-primary" href="/review">去体检</Link></div>
+                </div>
+              ) : it.kind === 'budget' ? (
+                <div className="todo" key="budget">
+                  <span className="pay-ic lg" style={{ color: 'var(--red)' }}><Icon name="wallet" /></span>
+                  <div style={{ minWidth: 0 }}>
+                    <div className="nm">每月支出超出预算 <Tag tone="red">超支 {formatYuan(monthly - prefs.budgetCents, 0)}</Tag></div>
+                    <div className="t3 ell" style={{ fontSize: 12 }}>当前每月 {formatYuan(monthly, 0)}，预算 {formatYuan(prefs.budgetCents, 0)}</div>
+                  </div>
+                  <div className="todo-a"><Link className="btn btn-sm" href="/review">看看哪些可以省</Link></div>
+                </div>
+              ) : it.kind === 'pay' ? (
                 <div className="todo" key={`p${it.p.id}`}>
                   <span className="pay-ic lg"><Icon name="card" /></span>
                   <div style={{ minWidth: 0 }}>

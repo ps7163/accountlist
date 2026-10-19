@@ -1,12 +1,13 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { db, schema } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
-import { addCycle, addDays, isValidDate, parseYuan, today, type Cycle } from '@/lib/billing';
-import { CATEGORIES, LOGINS, MFAS, NOTE_COLORS, providerOf } from '@/lib/constants';
-import { listSubs, notesOf, paymentsOf } from '@/lib/queries';
+import { log } from '@/lib/activity';
+import { addCycle, addDays, formatYuan, isValidDate, parseYuan, today, type Cycle } from '@/lib/billing';
+import { CATEGORIES, LOGINS, MFAS, NOTE_COLORS, USAGES, providerOf } from '@/lib/constants';
+import { listSubs, notesOf, paymentsOf, priceChangesOf } from '@/lib/queries';
 import { setSetting } from '@/lib/settings';
 import { SKINS } from '@/lib/skins';
 
@@ -40,6 +41,11 @@ function done(): void {
   revalidatePath('/', 'layout');
 }
 
+const liveSub = (id: number) => db.select().from(subscriptions).where(and(eq(subscriptions.id, Number(id)), isNull(subscriptions.deletedAt))).get();
+const liveEmail = (id: number) => db.select().from(emails).where(and(eq(emails.id, Number(id)), isNull(emails.deletedAt))).get();
+const livePay = (id: number) => db.select().from(payMethods).where(and(eq(payMethods.id, Number(id)), isNull(payMethods.deletedAt))).get();
+const subLabel = (s: { name: string; plan: string }) => `${s.name} ${s.plan}`.trim();
+
 /* ---------------- 订阅 ---------------- */
 
 export interface SubInput {
@@ -63,6 +69,7 @@ export interface SubInput {
   manageUrl: string;
   login: string;
   mfa: string;
+  usage: string;
   note: string;
 }
 
@@ -70,7 +77,7 @@ export async function saveSubscription(input: SubInput): Promise<Result> {
   await requireAuth();
   const name = str(input.name, 100);
   if (!name) return { ok: false, error: '请填写服务名称' };
-  const email = db.select().from(emails).where(eq(emails.id, Number(input.emailId))).get();
+  const email = liveEmail(input.emailId);
   if (!email) return { ok: false, error: '请选择登录邮箱' };
   const kind = (['sub', 'once', 'free'] as const).includes(input.kind) ? input.kind : 'sub';
   const cycle = (['week', 'month', 'quarter', 'year'] as const).includes(input.cycle) ? input.cycle : 'month';
@@ -80,10 +87,10 @@ export async function saveSubscription(input: SubInput): Promise<Result> {
   if (kind !== 'free' && priceCents <= 0) return { ok: false, error: '请填写金额' };
   const trial = kind === 'sub' && !!input.trial;
   let payMethodId = kind !== 'free' && input.payMethodId ? Number(input.payMethodId) : null;
-  if (payMethodId && !db.select().from(payMethods).where(eq(payMethods.id, payMethodId)).get()) return { ok: false, error: '支付方式不存在' };
+  if (payMethodId && !livePay(payMethodId)) return { ok: false, error: '支付方式不存在' };
   const newPayName = kind !== 'free' ? str(input.newPayName, 80) : '';
   if (!payMethodId && newPayName) {
-    const existing = db.select().from(payMethods).where(eq(payMethods.name, newPayName)).get();
+    const existing = db.select().from(payMethods).where(and(eq(payMethods.name, newPayName), isNull(payMethods.deletedAt))).get();
     payMethodId = existing ? existing.id : db.insert(payMethods).values({ name: newPayName, type: payTypeOf(str(input.channel, 40)) }).returning({ id: payMethods.id }).get().id;
   }
 
@@ -106,55 +113,64 @@ export async function saveSubscription(input: SubInput): Promise<Result> {
     manageUrl: safeUrl(input.manageUrl),
     login: input.login in LOGINS ? input.login : 'password',
     mfa: input.mfa in MFAS ? input.mfa : 'none',
+    usage: input.usage in USAGES ? input.usage : '',
     note: str(input.note, 2000),
     updatedAt: now(),
   };
 
   if (input.id) {
-    const exists = db.select({ id: subscriptions.id }).from(subscriptions).where(eq(subscriptions.id, Number(input.id))).get();
-    if (!exists) return { ok: false, error: '订阅不存在' };
-    db.update(subscriptions).set(values).where(eq(subscriptions.id, exists.id)).run();
+    const old = liveSub(input.id);
+    if (!old) return { ok: false, error: '订阅不存在' };
+    db.transaction((tx) => {
+      // 价格变动：同一计费方式和周期下金额变化才记录
+      if (old.kind !== 'free' && kind === old.kind && cycle === old.cycle && old.priceCents !== priceCents) {
+        tx.insert(schema.priceChanges).values({ subscriptionId: old.id, date: today(), oldCents: old.priceCents, newCents: priceCents }).run();
+      }
+      tx.update(subscriptions).set(values).where(eq(subscriptions.id, old.id)).run();
+    });
+    log('编辑订阅', subLabel(values), old.priceCents !== priceCents ? `价格 ${formatYuan(old.priceCents)} → ${formatYuan(priceCents)}` : '');
     done();
-    return { ok: true, id: exists.id };
+    return { ok: true, id: old.id };
   }
   const id = db.transaction((tx) => {
     const row = tx.insert(subscriptions).values(values).returning({ id: subscriptions.id }).get();
     if (kind === 'once') tx.insert(payments).values({ subscriptionId: row.id, date, amountCents: priceCents, note: '一次性购买' }).run();
     return row.id;
   });
+  log('新建订阅', subLabel(values), email.address);
   done();
   return { ok: true, id };
 }
 
+/** 删除订阅：移入回收站，连同它的备注卡片 */
 export async function deleteSubscription(id: number): Promise<Result> {
   await requireAuth();
+  const s = liveSub(id);
+  if (!s) return { ok: false, error: '订阅不存在' };
+  const at = now();
   db.transaction((tx) => {
-    tx.delete(notes).where(and(eq(notes.targetType, 'sub'), eq(notes.targetId, id))).run();
-    tx.delete(subscriptions).where(eq(subscriptions.id, id)).run();
+    tx.update(notes).set({ deletedAt: at }).where(and(eq(notes.targetType, 'sub'), eq(notes.targetId, s.id), isNull(notes.deletedAt))).run();
+    tx.update(subscriptions).set({ deletedAt: at }).where(eq(subscriptions.id, s.id)).run();
   });
+  log('删除订阅', subLabel(s), '已移入回收站');
   done();
   return { ok: true };
-}
-
-function getSub(id: number) {
-  return db.select().from(subscriptions).where(eq(subscriptions.id, Number(id))).get();
 }
 
 /** 标记已续费：按今天记一笔付费，并把下次扣费日顺延一个周期（已过期的从今天重新计算周期） */
 export async function markRenewed(id: number): Promise<Result & { nextDate?: string }> {
   await requireAuth();
-  const s = getSub(id);
+  const s = liveSub(id);
   if (!s || s.kind !== 'sub' || !s.nextDate) return { ok: false, error: '这个订阅不能续费' };
   const t = today();
-  const base = s.nextDate < t ? t : s.nextDate;
-  const nextDate = addCycle(base, s.cycle, 1, s.nextDate < t ? Number(t.slice(8, 10)) : s.anchorDay);
+  const late = s.nextDate < t;
+  const anchor = late ? Number(t.slice(8, 10)) : s.anchorDay;
+  const nextDate = addCycle(late ? t : s.nextDate, s.cycle, 1, anchor);
   db.transaction((tx) => {
     tx.insert(payments).values({ subscriptionId: s.id, date: t, amountCents: s.priceCents, note: '手动续费' }).run();
-    tx.update(subscriptions)
-      .set({ nextDate, anchorDay: s.nextDate! < t ? Number(t.slice(8, 10)) : s.anchorDay, status: 'active', snoozeUntil: null, updatedAt: now() })
-      .where(eq(subscriptions.id, s.id))
-      .run();
+    tx.update(subscriptions).set({ nextDate, anchorDay: anchor, status: 'active', snoozeUntil: null, updatedAt: now() }).where(eq(subscriptions.id, s.id)).run();
   });
+  log('标记已续费', subLabel(s), `${formatYuan(s.priceCents)}，下次 ${nextDate}`);
   done();
   return { ok: true, nextDate };
 }
@@ -162,12 +178,13 @@ export async function markRenewed(id: number): Promise<Result & { nextDate?: str
 /** 标记已取消：保留到期日，到期后不再提醒 */
 export async function cancelSubscription(id: number): Promise<Result> {
   await requireAuth();
-  const s = getSub(id);
+  const s = liveSub(id);
   if (!s) return { ok: false, error: '订阅不存在' };
   db.update(subscriptions)
     .set({ status: 'cancelled', autoRenew: false, nextDate: s.trialEnd ?? s.nextDate, trialEnd: null, snoozeUntil: null, updatedAt: now() })
     .where(eq(subscriptions.id, s.id))
     .run();
+  log('取消订阅', subLabel(s));
   done();
   return { ok: true };
 }
@@ -175,18 +192,22 @@ export async function cancelSubscription(id: number): Promise<Result> {
 /** 试用转正式：试用结束日即首次扣费日 */
 export async function convertTrial(id: number): Promise<Result> {
   await requireAuth();
-  const s = getSub(id);
+  const s = liveSub(id);
   if (!s || !s.trialEnd) return { ok: false, error: '这个订阅不在试用中' };
   db.update(subscriptions).set({ nextDate: s.trialEnd, trialEnd: null, autoRenew: true, snoozeUntil: null, updatedAt: now() }).where(eq(subscriptions.id, s.id)).run();
+  log('试用转正式', subLabel(s), `首次扣费 ${s.trialEnd}`);
   done();
   return { ok: true };
 }
 
 export async function snoozeSubscription(id: number, days: number): Promise<Result & { until?: string }> {
   await requireAuth();
+  const s = liveSub(id);
+  if (!s) return { ok: false, error: '订阅不存在' };
   const n = Math.min(30, Math.max(1, Math.round(Number(days)) || 1));
   const until = addDays(today(), n);
-  db.update(subscriptions).set({ snoozeUntil: until }).where(eq(subscriptions.id, Number(id))).run();
+  db.update(subscriptions).set({ snoozeUntil: until }).where(eq(subscriptions.id, s.id)).run();
+  log('稍后提醒', subLabel(s), `${until} 再提醒`);
   done();
   return { ok: true, until };
 }
@@ -203,23 +224,58 @@ export async function getSubDetail(id: number) {
   const sub = listSubs().find((s) => s.id === Number(id));
   if (!sub) return null;
   const email = db.select().from(emails).where(eq(emails.id, sub.emailId)).get()!;
-  return { sub, email, payments: paymentsOf(sub.id), notes: notesOf('sub', sub.id) };
+  return { sub, email, payments: paymentsOf(sub.id), notes: notesOf('sub', sub.id), priceChanges: priceChangesOf(sub.id) };
 }
 
 export async function addPayment(subId: number, date: string, price: string): Promise<Result> {
   await requireAuth();
-  if (!getSub(subId)) return { ok: false, error: '订阅不存在' };
+  const s = liveSub(subId);
+  if (!s) return { ok: false, error: '订阅不存在' };
   if (!isValidDate(date)) return { ok: false, error: '日期不正确' };
   const amountCents = parseYuan(price);
   if (amountCents <= 0) return { ok: false, error: '请填写金额' };
-  db.insert(payments).values({ subscriptionId: Number(subId), date, amountCents, note: '手动添加' }).run();
+  db.insert(payments).values({ subscriptionId: s.id, date, amountCents, note: '手动添加' }).run();
+  log('补记付费', subLabel(s), `${date} ${formatYuan(amountCents)}`);
   done();
   return { ok: true };
 }
 
 export async function deletePayment(id: number): Promise<Result> {
   await requireAuth();
-  db.delete(payments).where(eq(payments.id, Number(id))).run();
+  const p = db.select().from(payments).where(eq(payments.id, Number(id))).get();
+  if (!p) return { ok: false, error: '记录不存在' };
+  db.delete(payments).where(eq(payments.id, p.id)).run();
+  const s = db.select().from(subscriptions).where(eq(subscriptions.id, p.subscriptionId)).get();
+  log('删除付费记录', s ? subLabel(s) : '', `${p.date} ${formatYuan(p.amountCents)}`);
+  done();
+  return { ok: true };
+}
+
+/** 设置使用频率（订阅体检里快速标记） */
+export async function setUsage(id: number, usage: string): Promise<Result> {
+  await requireAuth();
+  const s = liveSub(id);
+  if (!s || !(usage in USAGES)) return { ok: false, error: '参数不正确' };
+  db.update(subscriptions).set({ usage, updatedAt: now() }).where(eq(subscriptions.id, s.id)).run();
+  done();
+  return { ok: true };
+}
+
+/** 体检时确认保留：90 天内不再出现在体检建议里 */
+export async function keepSubscription(id: number): Promise<Result> {
+  await requireAuth();
+  const s = liveSub(id);
+  if (!s) return { ok: false, error: '订阅不存在' };
+  db.update(subscriptions).set({ reviewedAt: today() }).where(eq(subscriptions.id, s.id)).run();
+  log('体检确认保留', subLabel(s));
+  done();
+  return { ok: true };
+}
+
+export async function finishReview(): Promise<Result> {
+  await requireAuth();
+  setSetting('last_review', today());
+  log('完成订阅体检');
   done();
   return { ok: true };
 }
@@ -240,27 +296,35 @@ export async function saveEmail(input: EmailInput): Promise<Result> {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) return { ok: false, error: '邮箱地址格式不正确' };
   const recovery = str(input.recovery, 200).toLowerCase();
   if (recovery && recovery === address) return { ok: false, error: '辅助邮箱不能是它自己' };
-  const dup = db.select({ id: emails.id }).from(emails).where(eq(emails.address, address)).get();
-  if (dup && dup.id !== Number(input.id)) return { ok: false, error: '这个邮箱已经添加过了' };
+  const dups = db.select({ id: emails.id, deletedAt: emails.deletedAt }).from(emails).where(eq(emails.address, address)).all().filter((d) => d.id !== Number(input.id));
+  if (dups.some((d) => !d.deletedAt)) return { ok: false, error: '这个邮箱已经添加过了' };
+  if (dups.length) return { ok: false, error: '回收站里有这个邮箱，可以到「回收站」恢复' };
   const values = { address, provider: providerOf(address), phone: str(input.phone, 40), recovery, note: str(input.note, 300), updatedAt: now() };
   if (input.id) {
+    if (!liveEmail(input.id)) return { ok: false, error: '邮箱不存在' };
     db.update(emails).set(values).where(eq(emails.id, Number(input.id))).run();
+    log('编辑邮箱', address);
     done();
     return { ok: true, id: Number(input.id) };
   }
   const row = db.insert(emails).values(values).returning({ id: emails.id }).get();
+  log('添加邮箱', address);
   done();
   return { ok: true, id: row.id };
 }
 
 export async function deleteEmail(id: number): Promise<Result> {
   await requireAuth();
-  const used = db.select({ id: subscriptions.id }).from(subscriptions).where(eq(subscriptions.emailId, Number(id))).all();
+  const e = liveEmail(id);
+  if (!e) return { ok: false, error: '邮箱不存在' };
+  const used = db.select({ id: subscriptions.id }).from(subscriptions).where(and(eq(subscriptions.emailId, e.id), isNull(subscriptions.deletedAt))).all();
   if (used.length) return { ok: false, error: `还有 ${used.length} 个服务使用这个邮箱，请先删除或改到其他邮箱` };
+  const at = now();
   db.transaction((tx) => {
-    tx.delete(notes).where(and(eq(notes.targetType, 'email'), eq(notes.targetId, Number(id)))).run();
-    tx.delete(emails).where(eq(emails.id, Number(id))).run();
+    tx.update(notes).set({ deletedAt: at }).where(and(eq(notes.targetType, 'email'), eq(notes.targetId, e.id), isNull(notes.deletedAt))).run();
+    tx.update(emails).set({ deletedAt: at }).where(eq(emails.id, e.id)).run();
   });
+  log('删除邮箱', e.address, '已移入回收站');
   done();
   return { ok: true };
 }
@@ -283,18 +347,24 @@ export async function savePayMethod(input: PayInput): Promise<Result> {
   if (expireMonth && !/^\d{4}-(0[1-9]|1[0-2])$/.test(expireMonth)) return { ok: false, error: '有效期格式应为 YYYY-MM' };
   const values = { name, type: str(input.type, 30) || '其他', expireMonth: expireMonth || null, note: str(input.note, 300), updatedAt: now() };
   if (input.id) {
+    if (!livePay(input.id)) return { ok: false, error: '支付方式不存在' };
     db.update(payMethods).set(values).where(eq(payMethods.id, Number(input.id))).run();
+    log('编辑支付方式', name);
     done();
     return { ok: true, id: Number(input.id) };
   }
   const row = db.insert(payMethods).values(values).returning({ id: payMethods.id }).get();
+  log('添加支付方式', name);
   done();
   return { ok: true, id: row.id };
 }
 
 export async function deletePayMethod(id: number): Promise<Result> {
   await requireAuth();
-  db.delete(payMethods).where(eq(payMethods.id, Number(id))).run();
+  const p = livePay(id);
+  if (!p) return { ok: false, error: '支付方式不存在' };
+  db.update(payMethods).set({ deletedAt: now() }).where(eq(payMethods.id, p.id)).run();
+  log('删除支付方式', p.name, '已移入回收站');
   done();
   return { ok: true };
 }
@@ -316,8 +386,7 @@ export async function saveNote(input: NoteInput): Promise<Result> {
   const title = str(input.title, 100);
   if (!title) return { ok: false, error: '请填写标题' };
   const targetType = input.targetType === 'email' ? 'email' : 'sub';
-  const table = targetType === 'email' ? emails : subscriptions;
-  if (!db.select({ id: table.id }).from(table).where(eq(table.id, Number(input.targetId))).get()) return { ok: false, error: '关联的账号不存在' };
+  if (!(targetType === 'email' ? liveEmail(input.targetId) : liveSub(input.targetId))) return { ok: false, error: '关联的账号不存在' };
   const values = {
     targetType,
     targetId: Number(input.targetId),
@@ -328,25 +397,93 @@ export async function saveNote(input: NoteInput): Promise<Result> {
     updatedAt: now(),
   } as const;
   if (input.id) {
-    db.update(notes).set(values).where(eq(notes.id, Number(input.id))).run();
+    db.update(notes).set(values).where(and(eq(notes.id, Number(input.id)), isNull(notes.deletedAt))).run();
+    log('编辑卡片', title);
     done();
     return { ok: true, id: Number(input.id) };
   }
   const row = db.insert(notes).values(values).returning({ id: notes.id }).get();
+  log('新建卡片', title);
   done();
   return { ok: true, id: row.id };
 }
 
 export async function deleteNote(id: number): Promise<Result> {
   await requireAuth();
-  db.delete(notes).where(eq(notes.id, Number(id))).run();
+  const n = db.select().from(notes).where(and(eq(notes.id, Number(id)), isNull(notes.deletedAt))).get();
+  if (!n) return { ok: false, error: '卡片不存在' };
+  db.update(notes).set({ deletedAt: now() }).where(eq(notes.id, n.id)).run();
+  log('删除卡片', n.title, '已移入回收站');
   done();
   return { ok: true };
 }
 
+/* ---------------- 回收站 ---------------- */
+
+export type TrashType = 'sub' | 'email' | 'pay' | 'note';
+
+export async function restoreItem(type: TrashType, id: number): Promise<Result> {
+  await requireAuth();
+  const n = Number(id);
+  if (type === 'sub') {
+    const s = db.select().from(subscriptions).where(eq(subscriptions.id, n)).get();
+    if (!s?.deletedAt) return { ok: false, error: '回收站里没有这一项' };
+    const e = db.select().from(emails).where(eq(emails.id, s.emailId)).get();
+    if (e?.deletedAt && db.select({ id: emails.id }).from(emails).where(and(eq(emails.address, e.address), isNull(emails.deletedAt))).get()) {
+      return { ok: false, error: `它的登录邮箱 ${e.address} 已被重新添加，请先把订阅改到新邮箱后再恢复` };
+    }
+    db.transaction((tx) => {
+      if (e?.deletedAt) tx.update(emails).set({ deletedAt: null }).where(eq(emails.id, e.id)).run();
+      tx.update(notes).set({ deletedAt: null }).where(and(eq(notes.targetType, 'sub'), eq(notes.targetId, s.id), eq(notes.deletedAt, s.deletedAt!))).run();
+      tx.update(subscriptions).set({ deletedAt: null }).where(eq(subscriptions.id, s.id)).run();
+    });
+    log('恢复订阅', subLabel(s), e?.deletedAt ? `同时恢复邮箱 ${e.address}` : '');
+  } else if (type === 'email') {
+    const e = db.select().from(emails).where(eq(emails.id, n)).get();
+    if (!e?.deletedAt) return { ok: false, error: '回收站里没有这一项' };
+    if (db.select({ id: emails.id }).from(emails).where(and(eq(emails.address, e.address), isNull(emails.deletedAt))).get()) return { ok: false, error: '已经有同名邮箱了' };
+    db.transaction((tx) => {
+      tx.update(notes).set({ deletedAt: null }).where(and(eq(notes.targetType, 'email'), eq(notes.targetId, e.id), eq(notes.deletedAt, e.deletedAt!))).run();
+      tx.update(emails).set({ deletedAt: null }).where(eq(emails.id, e.id)).run();
+    });
+    log('恢复邮箱', e.address);
+  } else if (type === 'pay') {
+    const p = db.select().from(payMethods).where(eq(payMethods.id, n)).get();
+    if (!p?.deletedAt) return { ok: false, error: '回收站里没有这一项' };
+    db.update(payMethods).set({ deletedAt: null }).where(eq(payMethods.id, p.id)).run();
+    log('恢复支付方式', p.name);
+  } else {
+    const x = db.select().from(notes).where(eq(notes.id, n)).get();
+    if (!x?.deletedAt) return { ok: false, error: '回收站里没有这一项' };
+    const target = x.targetType === 'email' ? liveEmail(x.targetId) : liveSub(x.targetId);
+    if (!target) return { ok: false, error: '它关联的账号还在回收站里，请先恢复账号' };
+    db.update(notes).set({ deletedAt: null }).where(eq(notes.id, x.id)).run();
+    log('恢复卡片', x.title);
+  }
+  done();
+  return { ok: true };
+}
+
+export async function purgeItem(type: TrashType, id: number): Promise<Result> {
+  await requireAuth();
+  const { purge } = await import('@/lib/trash');
+  const r = purge(type, Number(id));
+  if (r.ok) done();
+  return r;
+}
+
+export async function emptyTrash(): Promise<Result & { count?: number }> {
+  await requireAuth();
+  const { purgeOlderThan } = await import('@/lib/trash');
+  const count = purgeOlderThan(0);
+  log('清空回收站', '', `${count} 项`);
+  done();
+  return { ok: true, count };
+}
+
 /* ---------------- 偏好 ---------------- */
 
-export async function savePrefs(input: { remindDays?: number; skin?: string; displayName?: string }): Promise<Result> {
+export async function savePrefs(input: { remindDays?: number; skin?: string; displayName?: string; budget?: string }): Promise<Result> {
   await requireAuth();
   if (input.remindDays !== undefined) {
     const n = Math.round(Number(input.remindDays));
@@ -355,6 +492,11 @@ export async function savePrefs(input: { remindDays?: number; skin?: string; dis
   }
   if (input.skin !== undefined && SKINS[input.skin]) setSetting('skin', input.skin);
   if (input.displayName !== undefined) setSetting('display_name', str(input.displayName, 20) || '管理员');
+  if (input.budget !== undefined) {
+    const cents = str(input.budget) === '' ? 0 : parseYuan(input.budget);
+    setSetting('budget_cents', String(cents));
+    log('设置月度预算', '', cents ? formatYuan(cents, 0) : '不设预算');
+  }
   done();
   return { ok: true };
 }

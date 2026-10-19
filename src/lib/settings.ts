@@ -30,6 +30,8 @@ export interface Prefs {
   remindDays: number;
   skin: string;
   displayName: string;
+  /** 月度预算（分），0 表示不设 */
+  budgetCents: number;
 }
 
 export function getPrefs(): Prefs {
@@ -38,5 +40,6 @@ export function getPrefs(): Prefs {
     remindDays: Number.isInteger(n) && n >= 1 && n <= 60 ? n : 7,
     skin: getSetting('skin') || 'sky',
     displayName: getSetting('display_name') || '管理员',
+    budgetCents: Math.max(0, Number(getSetting('budget_cents')) || 0),
   };
 }
